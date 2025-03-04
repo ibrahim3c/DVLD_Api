@@ -75,7 +75,7 @@ namespace DVLD.Api.Controllers
 
         }
 
-        [HttpGet("RefreshToken")]
+        [HttpPost("RefreshToken")]
         public async Task<IActionResult> RefershTokenAsync()
         {
             var refreshToken = HttpContext.Request.Cookies[GeneralConsts.RefreshTokenKey];
@@ -90,7 +90,7 @@ namespace DVLD.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet("RevokeToken")]
+        [HttpPost("RevokeToken")]
         public async Task<IActionResult> RevokeTokenAsync([FromBody] string? refreshToken)
         {
             string token = refreshToken ?? HttpContext.Request.Cookies[GeneralConsts.RefreshTokenKey];
@@ -110,41 +110,94 @@ namespace DVLD.Api.Controllers
             HttpContext.Response.Cookies.Append(GeneralConsts.RefreshTokenKey, refreshToken, cookieOptions);
         }
 
-       
-        //[HttpPost("ForgotPassword")]
-        //public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return BadRequest(ModelState);
 
-        //    var scheme = Request.Scheme; // e.g., "https"
-        //    var host = Request.Host.Value; // e.g., "localhost:5000"
-        //    var result = await authService.ForgotPasswordAsync(forgotPasswordDTO, scheme, host);
+        //With Email Verification
+        [HttpPost("RegisterWithEmailConfirmation")]
+        public async Task<IActionResult> RegisterWithEmailConfirmationAsync(UserRegisterDTO userDTO)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        //    if (!result.Success)
-        //        return BadRequest(result.Messages);
+            var scheme = Request.Scheme; // e.g., "https"
+            var host = Request.Host.Value; // e.g., "localhost:5000"
+            var result = await authService.RegisterWithEmailVerification(userDTO, scheme, host);
+
+            if (!result.Success)
+                return BadRequest(result.Messages);
 
 
-        //    return Ok(result.Messages);
+            return Ok(result.Messages);
+        }
 
-        //    // after that user click on link and go to frontend page that
-        //    //1-capture userId, code
-        //    //2-make form for user to reset new password
-        //    // then user send data to reset password endpoint
-        //}
+        [HttpGet("VerifyEmail")]
+        public async Task<IActionResult> VerifyEmail(string userId, string code)
+        {
+            var result = await authService.VerifyEmailAsync(userId, code);
+            if (result.Success)
+                return Ok(result.Messages);
+            return BadRequest(result.Messages);
+        }
 
-        //[HttpPost("ResetPassword")]
-        //public async Task<IActionResult> ResetPassordAsync([FromForm] ResetPasswordDto resetPasswordDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return BadRequest(ModelState);
+        [HttpPost("LoginWithEmailConfirmation")]
+        public async Task<IActionResult> LoginWithEmailConfirmationAsync(UserLoginDTO userDTO)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await authService.LoginWithEmailVerificationAsync(userDTO);
+            if (!result.Success)
+                return BadRequest(result.Messages);
+            return Ok(result);
 
-        //    var result = await authService.ResetPasswordAsync(resetPasswordDto);
-        //    if (result.Success)
-        //        return Ok(result.Messages);
-        //    return BadRequest(result.Messages);
-        //}
+        }
 
+
+
+
+        [HttpPost("LoginWithEmailConfirmationWithRefreshToken")]
+        public async Task<IActionResult> LoginWithEmailConfirmationWithRefreshTokenAsync(UserLoginDTO userDTO)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await authService.LoginWithEmailVerificationWithRefreshTokenAsync(userDTO);
+            if (!result.Success)
+                return BadRequest(result.Messages);
+            return Ok(result);
+
+        }
+
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var scheme = Request.Scheme; // e.g., "https"
+            var host = Request.Host.Value; // e.g., "localhost:5000"
+            var result = await authService.ForgotPasswordAsync(forgotPasswordDTO, scheme, host);
+
+            if (!result.Success)
+                return BadRequest(result.Messages);
+
+
+            return Ok(result.Messages);
+
+            // after that user click on link and go to frontend page that
+            //1-capture userId, code
+            //2-make form for user to reset new password
+            // then user send data to reset password endpoint
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassordAsync([FromBody] ResetPasswordDTO resetPasswordDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await authService.ResetPasswordAsync(resetPasswordDto);
+            if (result.Success)
+                return Ok(result.Messages);
+            return BadRequest(result.Messages);
+        }
 
     }
 }

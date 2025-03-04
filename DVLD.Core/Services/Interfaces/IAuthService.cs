@@ -15,4 +15,17 @@ public interface IAuthService
     Task<AuthResultDTOForRefresh> RefreshTokenAsync(string refreshToken);
     Task<bool> RevokeTokenAsync(string refreshToken);
 
+
+    //With Email Verification
+    Task<ResultDTO<string>> RegisterWithEmailVerification(UserRegisterDTO userRegisterDTO, string scheme, string host);
+    Task<ResultDTO<string>> VerifyEmailAsync(string userId, string code);
+    Task<AuthResultDTO> LoginWithEmailVerificationAsync(UserLoginDTO UserDTO);
+    Task<AuthResultDTOForRefresh> LoginWithEmailVerificationWithRefreshTokenAsync(UserLoginDTO UserDTO);
+
+
+    // Forgot Password
+    Task<ResultDTO<string>> ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO, string scheme, string host);
+    Task<ResultDTO<string>> ResetPasswordAsync(ResetPasswordDTO resetPasswordDto);
+
+
 }

@@ -21,6 +21,14 @@ public static class DependencyInjection
         // u can do DepenencyInjection Class for Dal and one for Core layer :()
         services.AddScoped<IUOW, UOW>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IFileService, FileService>();
+        services.AddScoped<IMailingService, MainlingService>();
+
+
+        //sendGrid
+        services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));
+
+
 
         #region EfCoreConfigs
         var connectionString = configuration.GetConnectionString("DefaultConnection")
@@ -31,7 +39,6 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString);
         });
         #endregion
-
 
         #region JWTConfigs
         //(1)
