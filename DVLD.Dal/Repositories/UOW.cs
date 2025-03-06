@@ -10,9 +10,19 @@ public class UOW : IUOW
     public UOW(AppDbContext appDbContext)
     {
         this.appDbContext = appDbContext;
+        ApplicantRepository=new ApplicantRepository(appDbContext);
     }
+
+    public IApplicantRepository ApplicantRepository {  get; private set; }
+
+
     public int Complete()
     {
         return appDbContext.SaveChanges();
+    }
+
+    public void Dispose()
+    {
+        appDbContext.Dispose();
     }
 }

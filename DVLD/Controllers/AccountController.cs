@@ -22,10 +22,19 @@ namespace DVLD.Api.Controllers
         public async Task<ActionResult<AuthResultDTO>> RegisterAsync(UserRegisterDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.RegisterAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
             return Ok(result);
 
         }
@@ -34,10 +43,19 @@ namespace DVLD.Api.Controllers
         public async Task<ActionResult<AuthResultDTO>> LoginAsync(UserLoginDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.LoginAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
             return Ok(result);
 
         }
@@ -49,10 +67,19 @@ namespace DVLD.Api.Controllers
         public async Task<ActionResult<AuthResultDTO>> RegisterWithRefreshTokenAsync(UserRegisterDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.RegisterWithRefreshTokenAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
 
             //set refresh token in response cookie
             setRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiresOn);
@@ -64,10 +91,19 @@ namespace DVLD.Api.Controllers
         public async Task<ActionResult<AuthResultDTO>> LoginWithRefreshTokenAsync(UserLoginDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.LoginWithRefreshTokenAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
 
             //set refresh token in response cookie
             setRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiresOn);
@@ -82,7 +118,7 @@ namespace DVLD.Api.Controllers
 
             var result = await authService.RefreshTokenAsync(refreshToken);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
 
             // set new refreshToken in response cookie
             setRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiresOn);
@@ -116,14 +152,23 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> RegisterWithEmailConfirmationAsync(UserRegisterDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
 
             var scheme = Request.Scheme; // e.g., "https"
             var host = Request.Host.Value; // e.g., "localhost:5000"
             var result = await authService.RegisterWithEmailVerification(userDTO, scheme, host);
 
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
 
 
             return Ok(result.Messages);
@@ -134,7 +179,7 @@ namespace DVLD.Api.Controllers
         {
             var result = await authService.VerifyEmailAsync(userId, code);
             if (result.Success)
-                return Ok(result.Messages);
+                return Ok(result);
             return BadRequest(result.Messages);
         }
 
@@ -142,10 +187,19 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> LoginWithEmailConfirmationAsync(UserLoginDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.LoginWithEmailVerificationAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
             return Ok(result);
 
         }
@@ -157,10 +211,19 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> LoginWithEmailConfirmationWithRefreshTokenAsync(UserLoginDTO userDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
             var result = await authService.LoginWithEmailVerificationWithRefreshTokenAsync(userDTO);
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
             return Ok(result);
 
         }
@@ -169,14 +232,23 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
 
             var scheme = Request.Scheme; // e.g., "https"
             var host = Request.Host.Value; // e.g., "localhost:5000"
             var result = await authService.ForgotPasswordAsync(forgotPasswordDTO, scheme, host);
 
             if (!result.Success)
-                return BadRequest(result.Messages);
+                return BadRequest(result);
 
 
             return Ok(result.Messages);
@@ -191,12 +263,21 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> ResetPassordAsync([FromBody] ResetPasswordDTO resetPasswordDto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new AuthResultDTO
+                {
+                    Success = false,
+                    Messages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                });
+            }
 
             var result = await authService.ResetPasswordAsync(resetPasswordDto);
             if (result.Success)
-                return Ok(result.Messages);
-            return BadRequest(result.Messages);
+                return Ok(result);
+            return BadRequest(result);
         }
 
     }

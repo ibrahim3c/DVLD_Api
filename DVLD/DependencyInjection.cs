@@ -1,10 +1,13 @@
-﻿using DVLD.Core.Helpers;
+﻿using DVLD.Core.DTOs;
+using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Implementations;
 using DVLD.Core.Services.Interfaces;
+using DVLD.Core.Validators;
 using DVLD.Dal.Data;
 using DVLD.Dal.Repositories;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IMailingService, MainlingService>();
+        services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
 
 
         //sendGrid

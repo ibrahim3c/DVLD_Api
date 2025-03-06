@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DVLD.Core.Helpers;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace DVLD.Dal.Configurations;
 
@@ -56,7 +57,7 @@ public class ApplicantConfig : IEntityTypeConfiguration<Applicant>
         builder.HasOne(a => a.User)
              .WithOne(a=>a.Applicant)
             .HasForeignKey<Applicant>(a=>a.UserId)
-            .OnDelete(DeleteBehavior.Restrict); // u can not delete user related to applicant
+            .OnDelete(DeleteBehavior.NoAction); 
 }
 
 }

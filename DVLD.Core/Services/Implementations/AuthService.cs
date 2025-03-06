@@ -4,6 +4,7 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -22,12 +23,14 @@ namespace DVLD.Core.Services.Implementations
         private readonly IUOW uow;
         private readonly IOptionsMonitor<JWT> JWTConfigs;
         private readonly IMailingService mailingService;
+        private readonly IValidator<UserRegisterDTO> userRegistValidator;
 
         public AuthService(UserManager<AppUser> userManager
             , RoleManager<AppRole> roleManager
             , IUOW uow
             , IOptionsMonitor<JWT> JWTConfigs
             ,IMailingService mailingService
+            ,IValidator<UserRegisterDTO> userRegisterValidator
 )
         {
             this.userManager = userManager;
@@ -35,11 +38,32 @@ namespace DVLD.Core.Services.Implementations
             this.uow = uow;
             this.JWTConfigs = JWTConfigs;
             this.mailingService = mailingService;
+            this.userRegistValidator = userRegisterValidator;
         }
 
         // JWT Token
         public async Task<AuthResultDTO> RegisterAsync(UserRegisterDTO userRegisterDTO)
         {
+            var validationResult = userRegistValidator.Validate(userRegisterDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return new AuthResultDTO()
+                {
+                    Success = false,
+                    Messages = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                };
+            }
+
+
+
+            if (await uow.ApplicantRepository.FindAsync(a=>a.NationalNo==userRegisterDTO.NationalNo) is not null)
+                return new AuthResultDTO()
+                {
+                    Success = false,
+                    Messages = new List<string> { "National Number is already Exist!" }
+                };
+
 
             if (await userManager.FindByEmailAsync(userRegisterDTO.Email) is not null)
                 return new AuthResultDTO()
@@ -84,7 +108,8 @@ namespace DVLD.Core.Services.Implementations
                 UserId = user.Id // Link the applicant to the user
             };
 
-            // TODO:Save applicant using applicant Repo
+            await uow.ApplicantRepository.AddAsync(applicant);
+            uow.Complete();
 
             // generate token
             var token = await GenerateJwtTokenAsync(user);
@@ -177,6 +202,24 @@ namespace DVLD.Core.Services.Implementations
 
         public async Task<AuthResultDTOForRefresh> RegisterWithRefreshTokenAsync(UserRegisterDTO userRegisterDTO)
         {
+            var validationResult = userRegistValidator.Validate(userRegisterDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return new AuthResultDTOForRefresh()
+                {
+                    Success = false,
+                    Messages = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                };
+            }
+
+
+            if (await uow.ApplicantRepository.FindAsync(a => a.NationalNo == userRegisterDTO.NationalNo) is not null)
+                return new AuthResultDTOForRefresh()
+                {
+                    Success = false,
+                    Messages = new List<string> { "National Number is already Exist!" }
+                };
 
             if (await userManager.FindByEmailAsync(userRegisterDTO.Email) is not null)
                 return new AuthResultDTOForRefresh()
@@ -219,7 +262,8 @@ namespace DVLD.Core.Services.Implementations
                 UserId = user.Id // Link the applicant to the user
             };
 
-            //TODO:Save applicant using applicant repo
+            await uow.ApplicantRepository.AddAsync(applicant);
+            uow.Complete();
 
             // generate token
             var token = await GenerateJwtTokenAsync(user);
@@ -371,6 +415,24 @@ namespace DVLD.Core.Services.Implementations
         // With Email Verification
         public async Task<ResultDTO<string>> RegisterWithEmailVerification(UserRegisterDTO userRegisterDTO, string scheme, string host)
         {
+            var validationResult = userRegistValidator.Validate(userRegisterDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return new ResultDTO<string>()
+                {
+                    Success = false,
+                    Messages = validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                };
+            }
+
+
+            if (await uow.ApplicantRepository.FindAsync(a => a.NationalNo == userRegisterDTO.NationalNo) is not null)
+                return new ResultDTO<string>()
+                {
+                    Success = false,
+                    Messages = new List<string> { "National Number is already Exist!" }
+                };
 
             if (await userManager.FindByEmailAsync(userRegisterDTO.Email) is not null)
                 return new ResultDTO<string>()
@@ -412,7 +474,9 @@ namespace DVLD.Core.Services.Implementations
                 UserId = user.Id // Link the applicant to the user
             };
 
-            // TODO: add applicant using applicant repository
+            await uow.ApplicantRepository.AddAsync(applicant);
+            uow.Complete();
+
 
             // add role to user
             await userManager.AddToRoleAsync(user, Roles.UserRole);
@@ -646,7 +710,6 @@ namespace DVLD.Core.Services.Implementations
                 return ResultDTO<string>.Failure(["Error resetting password."]);
             }
         }
-
 
 
         /*
