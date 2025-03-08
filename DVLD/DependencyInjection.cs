@@ -22,17 +22,22 @@ public static class DependencyInjection
 
 
         // u can do DepenencyInjection Class for Dal and one for Core layer :()
+
         services.AddScoped<IUOW, UOW>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRolesService, RoleService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IApplicantService, ApplicantService>();
+        services.AddScoped<IApplicationService, ApplicationService>();
+        services.AddScoped<ITestService, TestService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IMailingService, MainlingService>();
-        services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
 
+        services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
+        services.AddScoped<IValidator<ApplicantDTO>, ApplicantDTOValidator>();
 
         //sendGrid
         services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));
-
-
 
         #region EfCoreConfigs
         var connectionString = configuration.GetConnectionString("DefaultConnection")
@@ -90,6 +95,7 @@ public static class DependencyInjection
 
                      );
         #endregion
+        
         return services;
 
 

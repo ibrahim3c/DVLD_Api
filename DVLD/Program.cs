@@ -16,11 +16,8 @@ namespace DVLD
             builder.Services.AddSwaggerGen();
 
             #region myConfigs
-
             //Add configuration from the secret.json file
             builder.Configuration.AddJsonFile("Secret.json", optional: false, reloadOnChange: true);
-
-            //Dal
             builder.Services.AddServices(builder.Configuration);
             #endregion
 

@@ -4,6 +4,7 @@ using DVLD.Dal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DVLD.Dal.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250308194450_addAppTypesTable")]
+    partial class addAppTypesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -685,55 +688,6 @@ namespace DVLD.Dal.Migrations
                         {
                             CountryId = 82,
                             CountryName = "Japan"
-                        });
-                });
-
-            modelBuilder.Entity("DVLD.Core.Models.TestType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("TypeFee")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TestTypes", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "This assesses the applicant's visual acuity to ensure they meet the minimum vision standards.",
-                            Title = "Vision Test",
-                            TypeFee = 10.00000m
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "This test assesses the applicant's knowledge of traffic laws, road signs, and safe driving practices.",
-                            Title = "Written (Theory) Test",
-                            TypeFee = 20.00000m
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "This test evaluates the applicant's driving skills and ability to operate a vehicle safely.",
-                            Title = "Practical (Street) Test",
-                            TypeFee = 35.00000m
                         });
                 });
 

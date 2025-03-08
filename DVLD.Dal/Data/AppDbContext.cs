@@ -9,6 +9,8 @@ public class AppDbContext: IdentityDbContext<AppUser, AppRole, string>
 {
     public DbSet<Applicant> Applicants { get; set; }
     public DbSet<Country> Countries { get; set; }
+    public DbSet<ApplicationType> applicationTypes { get; set; }
+    public DbSet<TestType> testTypes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions) { }
 

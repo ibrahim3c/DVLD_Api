@@ -11,9 +11,14 @@ public class UOW : IUOW
     {
         this.appDbContext = appDbContext;
         ApplicantRepository=new ApplicantRepository(appDbContext);
+        appTypeRepository=new AppTypeRepository(appDbContext);
+        testTypeRepository=new TestTypeRepository(appDbContext);
+
     }
 
     public IApplicantRepository ApplicantRepository {  get; private set; }
+    public IAppTypeRepository  appTypeRepository {  get; private set; }
+    public ITestTypeRepository testTypeRepository { get; private set; }
 
 
     public int Complete()
