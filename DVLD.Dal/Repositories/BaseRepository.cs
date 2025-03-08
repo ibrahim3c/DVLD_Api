@@ -162,6 +162,14 @@ namespace DVLD.Dal.Repositories
 
             return await query.ToListAsync();
         }
+        public  IEnumerable<T> Paginate( int take, int skip)
+        {
+            return  _context.Set<T>().Skip(skip).Take(take).ToList();
+        }
+        public async Task<IEnumerable<T>> PaginateAsync(int take, int skip)
+        {
+            return await _context.Set<T>().Skip(skip).Take(take).ToListAsync();
+        }
 
         public T Add(T entity)
         {
@@ -233,6 +241,26 @@ namespace DVLD.Dal.Repositories
             return await _context.Set<T>().CountAsync(criteria);
         }
 
+
+
+        public bool Any()
+        {
+            return _context.Set<T>().Any();
+        }
+
+        public bool Any(Expression<Func<T, bool>> criteria)
+        {
+            return _context.Set<T>().Any(criteria);
+        }
+
+        public async Task<bool> AnyAsync()
+        {
+            return await _context.Set<T>().AnyAsync();
+        }
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> criteria)
+        {
+            return await _context.Set<T>().AnyAsync(criteria);
+        }
 
 
 

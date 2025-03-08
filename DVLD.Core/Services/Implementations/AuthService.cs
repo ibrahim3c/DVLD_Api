@@ -79,7 +79,8 @@ namespace DVLD.Core.Services.Implementations
             {
                 UserName = userRegisterDTO.Email, // Assuming username is email
                 Email = userRegisterDTO.Email,
-                IsActive = true // Set default active status
+                IsActive = true ,// Set default active status
+                PhoneNumber = userRegisterDTO.PhoneNumber
             };
 
             var result = await userManager.CreateAsync(user, userRegisterDTO.Password);
@@ -233,7 +234,8 @@ namespace DVLD.Core.Services.Implementations
             {
                 UserName = userRegisterDTO.Email, // Assuming username is email
                 Email = userRegisterDTO.Email,
-                IsActive = true // Set default active status
+                IsActive = true ,// Set default active status
+                PhoneNumber = userRegisterDTO.PhoneNumber,
             };
 
             var result = await userManager.CreateAsync(user, userRegisterDTO.Password);
@@ -447,7 +449,8 @@ namespace DVLD.Core.Services.Implementations
                 UserName = userRegisterDTO.Email, // Assuming username is email
                 Email = userRegisterDTO.Email,
                 IsActive = true, // Set default active status
-                EmailConfirmed=false
+                EmailConfirmed=false ,
+                PhoneNumber = userRegisterDTO.PhoneNumber
             };
 
             var result = await userManager.CreateAsync(user, userRegisterDTO.Password);

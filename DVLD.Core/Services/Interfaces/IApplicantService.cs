@@ -9,13 +9,13 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<Applicant>> GetByIdAsync(int id);
         Task<Result<Applicant>> GetByNationalNoAsync(string nationalNo);
         Task<Result<List<Applicant>>> GetApplicantsAsync(int pageNumber, int pageSize);
-        Task<Result<AppUser>> GetApplicantUserbyIdAsync(int id);
-        Task<Result<AppUser>> GetApplicantUserbyNationalNoAsync(string nationalNo);
-        Task<Result<bool>> DeleteApplicantByIdAsync(int id);
-        Task<Result<bool>> DeleteApplicantByNationalNoAsync(string nationalNo);
-        Task<Result<bool>> IsNationalNoTakenAsync(string nationalNo);
-        Task<Result<bool>> UpdateApplicantAsync(int id, ApplicantDTO updatedApplicant);
-        Task<Result<bool>> AddApplicant(ApplicantDTO addedApplicant);
+        Task<Result<string>> GetApplicantUserIdbyIdAsync(int id);
+        Task<Result<string>> GetApplicantUserIdbyNationalNoAsync(string nationalNo);
+        Task<Result> DeleteApplicantByIdAsync(int id);
+        Task<Result> DeleteApplicantByNationalNoAsync(string nationalNo);
+        Task<Result> IsNationalNoTakenAsync(string nationalNo);
+        Task<Result> UpdateApplicantAsync(int id, ApplicantDTO updatedApplicant);
+        Task<Result<int>> AddApplicant(ApplicantDTO addedApplicant);
 
     }
 }

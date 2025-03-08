@@ -19,4 +19,26 @@
         // Factory Method for Failure (No need to pass a value)
         public static Result<T> Failure(List<string> errors) => new Result<T>(default, false, errors);
     }
+
+        public class Result
+        {
+            public bool IsSuccess { get; }
+            public List<string>? errors { get; }
+
+            private Result(bool isSuccess, List<string>? errors = null)
+            {
+                IsSuccess = isSuccess;
+                errors = errors ?? new List<string>();
+            }
+
+            // Factory Method for Success
+            public static Result Success()
+                => new Result(true);
+
+            // Factory Method for Failure
+            public static Result Failure(List<string> errors)
+                => new Result(false, errors);
+
+        }
+
 }

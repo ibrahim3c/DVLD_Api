@@ -5,6 +5,7 @@ namespace DVLD.Core.DTOs
 {
     public class ApplicantDTO
     {
+
         public string NationalNo { get; set; } = default!;
         public string Fname { get; set; } = default!;
         public string Sname { get; set; } = default!;

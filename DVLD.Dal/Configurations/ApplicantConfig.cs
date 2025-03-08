@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DVLD.Core.Helpers;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace DVLD.Dal.Configurations;
 

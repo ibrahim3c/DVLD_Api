@@ -1,4 +1,9 @@
 ﻿using Core.DTOS;
+using DVLD.Core.DTOs;
+using DVLD.Core.Helpers;
+using DVLD.Core.IRepositories;
+using DVLD.Core.Models;
+using DVLD.Core.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,49 +12,51 @@ namespace DVLD.Core.Services.Implementations
     public class UserService : IUserService
     {
         private readonly UserManager<AppUser> userManager;
-        private readonly IMapper mapper;
-        private readonly IUnitOfWork unitOfWork;
-        private readonly IProjectService projectService;
+        private readonly IUOW unitOfWork;
         private readonly IFileService fileService;
         private readonly RoleManager<AppRole> roleManager;
         private readonly IRolesService rolesService;
 
         public UserService(UserManager<AppUser> userManager,
-            IMapper mapper,
-            IUnitOfWork unitOfWork
-            , IProjectService projectService
+            IUOW unitOfWork
             , IFileService fileService,
             RoleManager<AppRole> roleManager,
             IRolesService rolesService)
         {
             this.userManager = userManager;
-            this.mapper = mapper;
             this.unitOfWork = unitOfWork;
-            this.projectService = projectService;
             this.fileService = fileService;
             this.roleManager = roleManager;
             this.rolesService = rolesService;
         }
 
         // get
-        public async Task<ResultDTO<IEnumerable<GetUserDTO>>> GetAllUsersAsync()
+        public async Task<ResultDTO<IEnumerable<UserDTO>>> GetAllUsersAsync()
         {
-            var users = await userManager.Users.ToListAsync();
+            var users = await userManager.Users.Select(u=> new UserDTO
+            {
+                Email=u.Email,
+                PhoneNumber=u.PhoneNumber,
+                IsActive=u.IsActive
+            }).ToListAsync();
             if (!users.Any())
-                return ResultDTO<IEnumerable<GetUserDTO>>.Failure(["No Users Found"]);
-            var usersDTO = mapper.Map<IEnumerable<GetUserDTO>>(users);
+                return ResultDTO<IEnumerable<UserDTO>>.Failure(["No Users Found"]);
 
-            return ResultDTO<IEnumerable<GetUserDTO>>.SuccessFully(Data: usersDTO, messages: ["Users Found"]);
+            return ResultDTO<IEnumerable<UserDTO>>.SuccessFully(Data: users, messages: ["Users Found"]);
         }
-
-        public async Task<ResultDTO<GetUserDTO>> GetUserByIdAsync(string userID)
+        public async Task<ResultDTO<UserDTO>> GetUserByIdAsync(string userID)
         {
             var user = await userManager.FindByIdAsync(userID);
             if (user == null)
-                return ResultDTO<GetUserDTO>.Failure(["No User Found"]);
-            var userDTO = mapper.Map<GetUserDTO>(user);
+                return ResultDTO<UserDTO>.Failure(["No User Found"]);
+            var userDTO = new UserDTO
+            {
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                IsActive = user.IsActive
+            };
 
-            return ResultDTO<GetUserDTO>.SuccessFully(Data: userDTO, messages: ["Users Found"]);
+            return ResultDTO<UserDTO>.SuccessFully(Data: userDTO, messages: ["Users Found"]);
         }
 
         public async Task<ResultDTO<IEnumerable<GetRoleDTO>>> GetRolesOfUserAsync(string userId)
@@ -58,67 +65,41 @@ namespace DVLD.Core.Services.Implementations
             if (user == null)
                 return ResultDTO<IEnumerable<GetRoleDTO>>.Failure(["No User Found"]);
 
-            var rolesName = await userManager.GetRolesAsync(user);
-            if (!rolesName.Any())
+            var rolesNames = await userManager.GetRolesAsync(user);
+            if (!rolesNames.Any())
                 return ResultDTO<IEnumerable<GetRoleDTO>>.Failure(["No Roles Found"]);
 
             // if u want to get roles as object
-            var roles = new List<AppRole>();
-            foreach (var roleName in rolesName)
+            var roles = new List<GetRoleDTO>();
+            foreach (var roleName in rolesNames)
             {
                 var role = await roleManager.FindByNameAsync(roleName);
                 if (role != null)
                 {
-                    roles.Add(role);
+                    roles.Add(new GetRoleDTO
+                    {
+                        RoleId = role.Id,
+                        RoleName = roleName,
+                    });
                 }
             }
 
-            var rolesDTO = mapper.Map<IEnumerable<GetRoleDTO>>(roles);
-
-
-            return ResultDTO<IEnumerable<GetRoleDTO>>.SuccessFully(Data: rolesDTO, messages: ["Roles Found"]);
+            return ResultDTO<IEnumerable<GetRoleDTO>>.SuccessFully(Data: roles, messages: ["Roles Found"]);
         }
-
-
-
-        public async Task<ResultDTO<GetUserDTO>> GetUserByEmailAsync(string email)
+        public async Task<ResultDTO<UserDTO>> GetUserByEmailAsync(string email)
         {
+
             var user = await userManager.FindByEmailAsync(email);
             if (user == null)
-                return ResultDTO<GetUserDTO>.Failure(["No User Found"]);
-            var userDTO = mapper.Map<GetUserDTO>(user);
-
-            return ResultDTO<GetUserDTO>.SuccessFully(Data: userDTO, messages: ["Users Found"]);
-        }
-
-        public async Task<ResultDTO<IEnumerable<GetProjectDTO>>> GetAllUserProjectsAsync(string userId)
-        {
-            var userResult = await GetUserByIdAsync(userId);
-            if (!userResult.Success)
-                return ResultDTO<IEnumerable<GetProjectDTO>>.Failure(userResult.Messages);
-            var userProjects = await unitOfWork.ProjectRepository.FindAllAsync(p => p.UserId == userId);
-            if (!userProjects.Any())
-                return ResultDTO<IEnumerable<GetProjectDTO>>.Failure(["No projects Found"]);
-
-            var projects = mapper.Map<IEnumerable<GetProjectDTO>>(userProjects);
-            return ResultDTO<IEnumerable<GetProjectDTO>>.SuccessFully(["Projects Found"], Data: projects);
-        }
-        public async Task<ResultDTO<IEnumerable<GetAttachmentDTO>>> GetAllAttachmentsOfUserAsync(string userId)
-        {
-            var userProjects = await unitOfWork.ProjectRepository.FindAllAsync(p => p.UserId == userId, ["Tasks.Attachments"]);
-            var attachments = new List<GetAttachmentDTO>();
-            foreach (var project in userProjects)
+                return ResultDTO<UserDTO>.Failure(["No User Found"]);
+            var userDTO = new UserDTO
             {
-                var attResult = await projectService.GetProjectAttachmentsAsync(project.ProjectId);
-                if (attResult.Success)
-                    attachments.AddRange(attResult.Data);
-            }
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                IsActive = user.IsActive
+            };
 
-            if (!attachments.Any())
-                return ResultDTO<IEnumerable<GetAttachmentDTO>>.Failure(["No Attachments Found"]);
-
-            return ResultDTO<IEnumerable<GetAttachmentDTO>>.SuccessFully(["Attachments Found"], Data: attachments);
-
+            return ResultDTO<UserDTO>.SuccessFully(Data: userDTO, messages: ["Users Found"]);
         }
 
         // lock
@@ -150,46 +131,43 @@ namespace DVLD.Core.Services.Implementations
             return ResultDTO<string>.SuccessFully([message], null);
         }
 
-
         // add
-        public async Task<ResultDTO<GetUserDTO>> AddUserAsync(UserRegisterDTO userDTO)
+        public async Task<Result<string>> AddUserAsync(CreatedUserDTO createduserDTO)
         {
-            if (await userManager.FindByEmailAsync(userDTO.Email) is not null)
-                return ResultDTO<GetUserDTO>.Failure(["Email is already Registered!"]);
+            if (await userManager.FindByEmailAsync(createduserDTO.Email) is not null)
+                return Result<string>.Failure(["Email is already Registered!"]);
 
-            if (await userManager.FindByNameAsync(userDTO.UserName) is not null)
-                return ResultDTO<GetUserDTO>.Failure(["User Name is already Registered!"]);
+            var user = new AppUser
+            {
+                UserName = createduserDTO.Email,  // Use email as username
+                Email = createduserDTO.Email,
+                PhoneNumber = createduserDTO.PhoneNumber,
+                IsActive = createduserDTO.IsActive, // Ensure this property exists in AppUser
+            };
 
-            // create user
-            var user = mapper.Map<AppUser>(userDTO);
-            var result = await userManager.CreateAsync(user, userDTO.Password);
+            var result = await userManager.CreateAsync(user, createduserDTO.Password);
             if (!result.Succeeded)
-                return ResultDTO<GetUserDTO>.Failure(result.Errors.Select(e => e.Description).ToList());
+                return Result<string>.Failure(result.Errors.Select(e => e.Description).ToList());
 
-            return ResultDTO<GetUserDTO>.SuccessFully(["User Added Successfully"], (await GetUserByEmailAsync(user.Email)).Data);
-
+            return Result<string>.Success(user.Id);
         }
-
-
         // update 
-        public async Task<ResultDTO<GetUserDTO>> UpdateUserAsync(UpdateUserDTO userDTO)
+        public async Task<ResultDTO<UserDTO>> UpdateUserAsync(UpdateUserDTO userDTO)
         {
             var user = await userManager.FindByIdAsync(userDTO.UserId);
             if (user == null)
-                return ResultDTO<GetUserDTO>.Failure(["No User Found"]);
+                return ResultDTO<UserDTO>.Failure(["No User Found"]);
 
             if (user.UserName != userDTO.UserName)
                 user.UserName = userDTO.UserName;
 
-            if (user.Address != userDTO.Address)
-                user.Address = userDTO.Address;
 
             if (user.PhoneNumber != userDTO.PhoneNumber)
                 user.PhoneNumber = userDTO.PhoneNumber;
 
             await userManager.UpdateAsync(user);
 
-            return ResultDTO<GetUserDTO>.SuccessFully(["User Updated Successfully"], (await GetUserByEmailAsync(user.Email)).Data);
+            return ResultDTO<UserDTO>.SuccessFully(["User Updated Successfully"], (await GetUserByEmailAsync(user.Email)).Data);
 
 
         }
@@ -197,58 +175,38 @@ namespace DVLD.Core.Services.Implementations
         //TODO:ChangeEmail and ChangePassword
 
         // delete User
-        public async Task<ResultDTO<GetUserDTO>> DeleteUserAsync(string userID)
+        public async Task<Result> DeleteUserAsync(string userID)
         {
-
             var user = await userManager.FindByIdAsync(userID);
 
             if (user == null)
-                return ResultDTO<GetUserDTO>.Failure(["No User Found"]);
-
-            // delete all files that related to this user
-            var userProjects = await unitOfWork.ProjectRepository.FindAllAsync(p => p.UserId == userID, ["Tasks.Attachments"]);
-            var userAttachmentsFilePaths = userProjects
-                                 .SelectMany(p => p.Tasks)                    // Flatten tasks within each project
-                                 .SelectMany(t => t.Attachments)              // Flatten attachments within each task
-                                 .Where(attachment => attachment.FilePath != null)  // Filter to ensure FilePath is not null
-                                 .Select(attachment => attachment.FilePath)    // Select only the FilePath of each attachment
-                                 .ToList();
+                return Result.Failure(new List<string> { "No User Found" });
 
             IdentityResult result = await userManager.DeleteAsync(user);
 
+            if (!result.Succeeded)
+            {
+                return Result.Failure(new List<string> { "Failed To Delete This User" });
+            }
+
+            return Result.Success();
+        }
+
+        public async Task<Result> DeleteUserByEmailAsync(string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return Result.Failure(["No User Found"]);
+
+            IdentityResult result = await userManager.DeleteAsync(user);
 
             if (!result.Succeeded)
             {
-                return new ResultDTO<GetUserDTO>
-                {
-                    Success = false,
-                    Messages = new List<string> { "Failed To Delete This User" }
-                };
+                return Result.Failure(new List<string> { "Failed To Delete This User" });
 
             }
-
-            // delete all files that related to this user
-            if (userAttachmentsFilePaths.Any())
-                await fileService.DeleteAllFilesAsync(userAttachmentsFilePaths);
-
-            return new ResultDTO<GetUserDTO>
-            {
-                Success = true,
-                Messages = new List<string> { " User Deleted Successfully" },
-                Data = (await GetUserByIdAsync(userID)).Data
-            };
-
-
-        }
-
-        public async Task<ResultDTO<GetUserDTO>> DeleteUserByEmailAsync(string email)
-        {
-            var user = await GetUserByEmailAsync(email);
-            if (user.Success)
-            {
-                return await DeleteUserAsync(user.Data.UserId);
-            }
-            return user;
+            return Result.Success();
 
         }
 
@@ -266,8 +224,6 @@ namespace DVLD.Core.Services.Implementations
 
             return ResultDTO<IEnumerable<string>>.SuccessFully(Data: roles, messages: ["Roles Found"]);
         }
-
-
         public async Task<ResultDTO<ManageRolesDTO>> GetRolesForManagingAsync(string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
@@ -313,14 +269,7 @@ namespace DVLD.Core.Services.Implementations
 
             return ResultDTO<ManageRolesDTO>.SuccessFully(["Roles of User Managed Successfully"],
                 (await GetRolesForManagingAsync(manageRolesDTO.UserId)).Data);
-
-
         }
-
-
-
-
-
 
     }
 }

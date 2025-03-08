@@ -24,6 +24,10 @@ namespace DVLD.Core.IRepositories
         Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> criteria, int skip, int take);
         Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> criteria, int? skip, int? take,
             Expression<Func<T, object>> orderBy = null, string orderByDirection = OrderBy.Ascending);
+
+        IEnumerable<T> Paginate(int take, int skip);
+        Task<IEnumerable<T>> PaginateAsync(int take, int skip);
+
         T Add(T entity);
         Task<T> AddAsync(T entity);
         IEnumerable<T> AddRange(IEnumerable<T> entities);
@@ -37,6 +41,14 @@ namespace DVLD.Core.IRepositories
         int Count(Expression<Func<T, bool>> criteria);
         Task<int> CountAsync();
         Task<int> CountAsync(Expression<Func<T, bool>> criteria);
+
+
+
+        bool Any();
+        bool Any(Expression<Func<T, bool>> criteria);
+        Task<bool> AnyAsync();
+        Task<bool> AnyAsync(Expression<Func<T, bool>> criteria);
+
 
 
 
