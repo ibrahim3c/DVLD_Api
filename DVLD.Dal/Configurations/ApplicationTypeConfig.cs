@@ -23,6 +23,7 @@ namespace DVLD.Dal.Configurations
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
 
+
             builder.HasData(
               new ApplicationType
               {

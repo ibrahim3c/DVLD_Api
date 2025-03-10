@@ -31,5 +31,8 @@ namespace DVLD.Core.Models
         public AppUser User { get; set; } = default!;
         public string UserId {  get; set; } = default!;
 
+        public ICollection<Application>? Applications { get; set; } = new List<Application>();
+
+
     }
- }
+}

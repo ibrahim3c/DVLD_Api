@@ -9,8 +9,8 @@ namespace DVLD.Dal.Repositories
 {
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
-        private readonly AppDbContext _context;
-        private IDbContextTransaction _transaction;
+        protected readonly AppDbContext _context;
+        protected IDbContextTransaction _transaction;
 
         public BaseRepository(AppDbContext appDbContext)
         {

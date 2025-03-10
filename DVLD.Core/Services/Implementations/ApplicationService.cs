@@ -15,7 +15,7 @@ namespace DVLD.Core.Services.Implementations
         {
             this.uow = uow;
         }
-
+        // applicationType
         public async Task<Result<int>> AddAppTypeAync( TypeDTO appTypeDTO)
         {
             var errors = ObjectValidator.Validate<TypeDTO>(appTypeDTO);
@@ -37,12 +37,10 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(appType.Id);
         }
-
         private async Task<bool> IsTitleTaken(string title)
         {
             return await uow.appTypeRepository.AnyAsync(x => x.Title == title);
         }
-
         public async Task<Result> DeleteAppTypeAsync(int id)
         {
             var appType = await uow.appTypeRepository.GetByIdAsync(id);
@@ -54,8 +52,7 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result.Success();
         }
-
-       public async Task<Result<IEnumerable<TypeDTO>>> GetAllAppTypesAsync()
+        public async Task<Result<IEnumerable<TypeDTO>>> GetAllAppTypesAsync()
         {
             if( ! await uow.appTypeRepository.AnyAsync())
             {
@@ -69,7 +66,6 @@ namespace DVLD.Core.Services.Implementations
             });
             return Result<IEnumerable<TypeDTO>>.Success(appTypes);
         }
-
         public async Task<Result<TypeDTO>> GetAppTypeByIdAsync(int id)
         {
             var appType = await uow.appTypeRepository.GetByIdAsync(id);
@@ -87,7 +83,6 @@ namespace DVLD.Core.Services.Implementations
             return Result<TypeDTO>.Success(appTypeDTO);
 
         }
-
         public async Task<Result> UpdateAppTypeAsync(int id, TypeDTO appTypeDTO)
         {
             var errors = ObjectValidator.Validate(appTypeDTO);
@@ -120,6 +115,42 @@ namespace DVLD.Core.Services.Implementations
 
             return Result.Success();
         }
+
+        // NewLocalDrivingLicense
+        public async Task<Result>ApplyForNewLocalDrivingLincense(int applicantId,int licenseClassId)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(x => x.ApplicantId == applicantId))
+                return Result.Failure(["this applicant is not found!"]);
+
+            if (!await uow.LicenseClassRepository.AnyAsync(x => x.Id == licenseClassId))
+                return Result.Failure(["this License Class is not found!"]);
+
+            if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.NewLocalDrivingLicense
+                                                          && x.ApplicantId==applicantId
+                                                          && x.LicenseClassId == licenseClassId 
+                                                          && x.AppStatus == AppStatuses.Pending))
+                return Result.Failure(["U already have a pending application for this license class."]);
+
+            //TODO:check if he already has license with same class
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
+            if (appType == null)
+                return Result.Failure(["Application type not found!"]);
+
+            var application = new Application
+            {
+                AppDate = DateTime.Now,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Pending,
+                AppTypeID = (int)AppTypes.NewLocalDrivingLicense,
+                LicenseClassId = licenseClassId,
+            };
+            await uow.ApplicationRepository.AddAsync(application);
+            uow.Complete();
+                return Result.Success();
+        }
+
 
     }
 }

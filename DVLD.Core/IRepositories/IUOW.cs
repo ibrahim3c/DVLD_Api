@@ -5,6 +5,8 @@
         IApplicantRepository ApplicantRepository {get;}
         IAppTypeRepository  appTypeRepository { get;}
         ITestTypeRepository testTypeRepository { get;}
+        IApplicationRepository ApplicationRepository { get;}
+        ILicenseClassRepository LicenseClassRepository { get;}
         int Complete();
     }
 }

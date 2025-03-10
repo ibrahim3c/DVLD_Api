@@ -56,7 +56,8 @@ public class ApplicantConfig : IEntityTypeConfiguration<Applicant>
         builder.HasOne(a => a.User)
              .WithOne(a=>a.Applicant)
             .HasForeignKey<Applicant>(a=>a.UserId)
-            .OnDelete(DeleteBehavior.NoAction); 
+            .OnDelete(DeleteBehavior.NoAction);
+
 }
 
 }

@@ -13,12 +13,16 @@ public class UOW : IUOW
         ApplicantRepository=new ApplicantRepository(appDbContext);
         appTypeRepository=new AppTypeRepository(appDbContext);
         testTypeRepository=new TestTypeRepository(appDbContext);
+        ApplicationRepository = new ApplicationRepository(appDbContext);
+        LicenseClassRepository = new LicenseClassRepository(appDbContext);
 
     }
 
     public IApplicantRepository ApplicantRepository {  get; private set; }
     public IAppTypeRepository  appTypeRepository {  get; private set; }
     public ITestTypeRepository testTypeRepository { get; private set; }
+    public IApplicationRepository ApplicationRepository { get; private set; }
+    public ILicenseClassRepository LicenseClassRepository { get; private set; }
 
 
     public int Complete()

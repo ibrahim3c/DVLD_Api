@@ -4,6 +4,7 @@ using DVLD.Dal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DVLD.Dal.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250309203917_addApplicationTable")]
+    partial class addApplicationTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -206,16 +209,11 @@ namespace DVLD.Dal.Migrations
                     b.Property<int>("ApplicantId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LicenseClassId")
-                        .HasColumnType("int");
-
                     b.HasKey("AppID");
 
                     b.HasIndex("AppTypeID");
 
                     b.HasIndex("ApplicantId");
-
-                    b.HasIndex("LicenseClassId");
 
                     b.ToTable("Applications", (string)null);
                 });
@@ -727,103 +725,6 @@ namespace DVLD.Dal.Migrations
                         });
                 });
 
-            modelBuilder.Entity("DVLD.Core.Models.LicenseClass", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<decimal>("Fee")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("MinAge")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ValidityPeriod")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LicenseClasses", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "It allows the driver to drive small motorcycles.",
-                            Fee = 15.00m,
-                            MinAge = 18,
-                            Name = "Class 1 - Small Motorcycle",
-                            ValidityPeriod = 5
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Heavy Motorcycle License (Large Motorcycle).",
-                            Fee = 30.00m,
-                            MinAge = 21,
-                            Name = "Class 2 - Heavy Motorcycle License",
-                            ValidityPeriod = 5
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "Ordinary driving license (car licence).",
-                            Fee = 20.00m,
-                            MinAge = 18,
-                            Name = "Class 3 - Ordinary driving license",
-                            ValidityPeriod = 10
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Commercial driving license (taxi/limousine).",
-                            Fee = 200.00m,
-                            MinAge = 21,
-                            Name = "Class 4 - Commercial",
-                            ValidityPeriod = 10
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Description = "Agricultural and work vehicles used in farming.",
-                            Fee = 50.00m,
-                            MinAge = 21,
-                            Name = "Class 5 - Agricultural",
-                            ValidityPeriod = 10
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Description = "Small and medium bus license.",
-                            Fee = 250.00m,
-                            MinAge = 21,
-                            Name = "Class 6 - Small and medium bus",
-                            ValidityPeriod = 10
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Description = "Truck and heavy vehicle license.",
-                            Fee = 300.00m,
-                            MinAge = 21,
-                            Name = "Class 7 - Truck and heavy vehicle",
-                            ValidityPeriod = 10
-                        });
-                });
-
             modelBuilder.Entity("DVLD.Core.Models.TestType", b =>
                 {
                     b.Property<int>("Id")
@@ -1049,15 +950,9 @@ namespace DVLD.Dal.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DVLD.Core.Models.LicenseClass", "LicenseClass")
-                        .WithMany("Applications")
-                        .HasForeignKey("LicenseClassId");
-
                     b.Navigation("AppType");
 
                     b.Navigation("Applicant");
-
-                    b.Navigation("LicenseClass");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1129,11 +1024,6 @@ namespace DVLD.Dal.Migrations
             modelBuilder.Entity("DVLD.Core.Models.Country", b =>
                 {
                     b.Navigation("Applicants");
-                });
-
-            modelBuilder.Entity("DVLD.Core.Models.LicenseClass", b =>
-                {
-                    b.Navigation("Applications");
                 });
 #pragma warning restore 612, 618
         }
