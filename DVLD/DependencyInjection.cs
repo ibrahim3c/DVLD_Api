@@ -35,6 +35,7 @@ public static class DependencyInjection
 
         services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
         services.AddScoped<IValidator<ApplicantDTO>, ApplicantDTOValidator>();
+        services.AddScoped<IValidator<UpdateApplicationDTO>, UpdateApplicationDTOValidator>();
 
         //sendGrid
         services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));

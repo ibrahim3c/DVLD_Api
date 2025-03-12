@@ -209,5 +209,16 @@ namespace DVLD.Core.Services.Implementations
             uOW.Complete();
             return Result.Success();
         }
+
+        public async Task<Result<string>> GetFullNameAsync(int id)
+        {
+            var applicant = await uOW.ApplicantRepository.GetByIdAsync(id);
+            if (applicant == null)
+            {
+                return Result<string>.Failure(new List<string> { "There is no applicant with this id" });
+            }
+            var fullName=applicant.Fname +" "+ applicant.Sname+" "+applicant.Tname+" "+applicant.Lname;
+            return Result<string>.Success(fullName);
+        }
     }
 }

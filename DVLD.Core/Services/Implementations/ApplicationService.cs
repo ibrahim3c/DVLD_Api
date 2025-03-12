@@ -3,7 +3,7 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.VisualBasic;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -116,26 +116,54 @@ namespace DVLD.Core.Services.Implementations
             return Result.Success();
         }
 
+        // application
+        public async Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id)
+        {
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id, ["Applicant", "AppType", "LicenseClass"]);
+            if (app == null)
+                return Result<ApplicationDTO>.Failure(["Application not Found"]);
+            var fullName= app.Applicant.Fname??"" + " " + app.Applicant.Sname??"" + " " + app.Applicant.Tname??"" + " " + app.Applicant.Lname??"";
+            var appDTO = new ApplicationDTO
+            {
+                AppDate = app.AppDate,
+                AppFee = app.AppFee,
+                AppStatus = app.AppStatus,
+                ApplicantName = fullName,
+                ApplicationType = app.AppType.Title,
+                LicenseClass = app.LicenseClass!=null?app.LicenseClass.Name:"no License"
+            };
+            return Result<ApplicationDTO>.Success(appDTO);
+        }
+        public async Task<Result> DeleteAsync(int id)
+        {
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id);
+            if (app == null)
+                return Result.Failure(["Application not Found"]);
+            uow.ApplicationRepository.Delete(app);
+            uow.Complete();
+            return Result.Success();
+        }
+
         // NewLocalDrivingLicense
-        public async Task<Result>ApplyForNewLocalDrivingLincense(int applicantId,int licenseClassId)
+        public async Task<Result<int>>ApplyForNewLocalDrivingLincense(int applicantId,int licenseClassId)
         {
             if (!await uow.ApplicantRepository.AnyAsync(x => x.ApplicantId == applicantId))
-                return Result.Failure(["this applicant is not found!"]);
+                return Result<int>.Failure(["this applicant is not found!"]);
 
             if (!await uow.LicenseClassRepository.AnyAsync(x => x.Id == licenseClassId))
-                return Result.Failure(["this License Class is not found!"]);
+                return Result<int>.Failure(["this License Class is not found!"]);
 
             if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.NewLocalDrivingLicense
                                                           && x.ApplicantId==applicantId
                                                           && x.LicenseClassId == licenseClassId 
                                                           && x.AppStatus == AppStatuses.Pending))
-                return Result.Failure(["U already have a pending application for this license class."]);
+                return Result<int>.Failure(["U already have a pending application for this license class."]);
 
             //TODO:check if he already has license with same class
             // Get the application fee
             var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
             if (appType == null)
-                return Result.Failure(["Application type not found!"]);
+                return Result<int>.Failure(["Application type not found!"]);
 
             var application = new Application
             {
@@ -148,9 +176,15 @@ namespace DVLD.Core.Services.Implementations
             };
             await uow.ApplicationRepository.AddAsync(application);
             uow.Complete();
-                return Result.Success();
+                return Result<int>.Success(application.AppID);
         }
-
-
+        public async Task<Result> ApproveTheApplicationAsync(int appId)
+        {
+            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Approved);            
+        }
+        public async Task<Result> RejectTheApplicationAsync(int appId)
+        {
+            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Rejected);
+        }
     }
 }

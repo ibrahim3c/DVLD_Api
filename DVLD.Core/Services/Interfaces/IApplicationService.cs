@@ -13,8 +13,9 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<int>> AddAppTypeAync(TypeDTO appTypeDTO);
 
         // NewLocalDrivingLicense
-        Task<Result> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
-
+        Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
+        Task<Result> ApproveTheApplicationAsync(int appId);
+        Task<Result> RejectTheApplicationAsync(int appId);
 
     }
 }

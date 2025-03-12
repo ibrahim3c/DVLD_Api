@@ -11,6 +11,7 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<List<Applicant>>> GetApplicantsAsync(int pageNumber, int pageSize);
         Task<Result<string>> GetApplicantUserIdbyIdAsync(int id);
         Task<Result<string>> GetApplicantUserIdbyNationalNoAsync(string nationalNo);
+        Task<Result<string>> GetFullNameAsync(int id);
         Task<Result> DeleteApplicantByIdAsync(int id);
         Task<Result> DeleteApplicantByNationalNoAsync(string nationalNo);
         Task<Result> IsNationalNoTakenAsync(string nationalNo);

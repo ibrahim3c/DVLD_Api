@@ -1,6 +1,5 @@
 ﻿using DVLD.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DVLD.Dal.Configurations

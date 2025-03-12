@@ -21,7 +21,6 @@ namespace DVLD.Api.Controllers
                 //change this to created after we did getApplicantionByIdAsync
                 return Ok(result);
             return BadRequest(result);
-
         }
 
     }
