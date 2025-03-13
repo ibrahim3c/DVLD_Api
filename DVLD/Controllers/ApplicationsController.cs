@@ -22,6 +22,23 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+        [HttpPut]
+        public async Task<IActionResult>AcceptApplication(int applicationId)
+        {
+            var result=await applicationService.ApproveTheApplicationAsync(applicationId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> RejectApplication(int applicationId)
+        {
+            var result = await applicationService.RejectTheApplicationAsync(applicationId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
 
     }
 }

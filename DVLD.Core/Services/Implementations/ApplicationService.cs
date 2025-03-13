@@ -3,7 +3,6 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
-using Microsoft.VisualBasic;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -130,11 +129,32 @@ namespace DVLD.Core.Services.Implementations
                 AppStatus = app.AppStatus,
                 ApplicantName = fullName,
                 ApplicationType = app.AppType.Title,
-                LicenseClass = app.LicenseClass!=null?app.LicenseClass.Name:"no License"
+                LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                NationalNumber = app.Applicant.NationalNo
             };
             return Result<ApplicationDTO>.Success(appDTO);
         }
-        public async Task<Result> DeleteAsync(int id)
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationWithStatusAsync(string status)
+        {
+            if (!AppStatuses.IsValidStatus(status))
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["Invalid status"]);
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppStatus == status, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new ApplicationDTO
+                {
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = app.Applicant.Fname ?? "" + " " + app.Applicant.Sname ?? "" + " " + app.Applicant.Tname ?? "" + " " + app.Applicant.Lname ?? "",
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo
+                });
+            if(apps!=null)
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+
+        }
+        public async Task<Result> DeleteApplicationAsync(int id)
         {
             var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id);
             if (app == null)
@@ -143,7 +163,25 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result.Success();
         }
+        public async Task<Result> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO)
+        {
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id);
+            if (app == null)
+                return Result.Failure(["Application not Found"]);
 
+            app.AppStatus = updateApplicationDTO.AppStatus;
+            app.AppDate=updateApplicationDTO.AppDate;
+            var appType=await GetAppTypeByIdAsync(updateApplicationDTO.AppTypeId);
+            if (appType == null)
+                return Result.Failure(["InValid Application Type"]);
+
+            app.AppTypeID = updateApplicationDTO.AppTypeId;
+            app.AppFee = appType.Value!.TypeFee;
+
+            uow.ApplicationRepository.Update(app);
+            uow.Complete();
+            return Result.Success();
+        }
         // NewLocalDrivingLicense
         public async Task<Result<int>>ApplyForNewLocalDrivingLincense(int applicantId,int licenseClassId)
         {
@@ -186,5 +224,6 @@ namespace DVLD.Core.Services.Implementations
         {
             return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Rejected);
         }
+
     }
 }

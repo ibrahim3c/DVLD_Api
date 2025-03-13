@@ -15,6 +15,8 @@ public class UOW : IUOW
         testTypeRepository=new TestTypeRepository(appDbContext);
         ApplicationRepository = new ApplicationRepository(appDbContext);
         LicenseClassRepository = new LicenseClassRepository(appDbContext);
+        TestAppointmentRepository = new TestAppointementRepository(appDbContext);
+        TestRepository=new TestRepository(appDbContext);
 
     }
 
@@ -23,6 +25,8 @@ public class UOW : IUOW
     public ITestTypeRepository testTypeRepository { get; private set; }
     public IApplicationRepository ApplicationRepository { get; private set; }
     public ILicenseClassRepository LicenseClassRepository { get; private set; }
+    public ITestAppointmentRepository TestAppointmentRepository { get; private set; }
+    public ITestRepository TestRepository { get; private set; }
 
 
     public int Complete()

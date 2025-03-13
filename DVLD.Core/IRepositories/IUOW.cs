@@ -7,6 +7,8 @@
         ITestTypeRepository testTypeRepository { get;}
         IApplicationRepository ApplicationRepository { get;}
         ILicenseClassRepository LicenseClassRepository { get;}
+        ITestAppointmentRepository TestAppointmentRepository { get;}
+        ITestRepository TestRepository { get;}
         int Complete();
     }
 }

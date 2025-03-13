@@ -8,7 +8,7 @@ namespace DVLD.Core.Validators
     {
         public UpdateApplicationDTOValidator()
         {
-            RuleFor(a=>a.AppType).NotEmpty()
+            RuleFor(a=>a.AppTypeId).NotEmpty()
                 .WithMessage("The Application Type is required");
             RuleFor(a => a.AppStatus)
                 .NotEmpty().WithMessage("The Application Status is required") 

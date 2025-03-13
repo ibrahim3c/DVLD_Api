@@ -6,6 +6,6 @@
         public string Title { get; set; }
         public string Description { get; set; }
         public decimal TypeFee {  get; set; }
-        public ICollection<Application>? Applications {  get; set; }=new List<Application>();
+        public ICollection<Application> Applications {  get; set; }=new List<Application>();
     }
 }

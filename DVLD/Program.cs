@@ -1,4 +1,5 @@
 using DVLD.Api;
+using DVLD.Api.Middlewares;
 
 namespace DVLD
 {
@@ -31,7 +32,7 @@ namespace DVLD
             }
 
             app.UseHttpsRedirection();
-
+            app.UseMiddleware<GlobalExceptionHandler>();
             app.UseAuthentication();
             app.UseAuthorization();
 

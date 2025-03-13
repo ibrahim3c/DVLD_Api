@@ -6,5 +6,6 @@
         public string Title { get; set; }
         public string Description { get; set; }
         public decimal TypeFee { get; set; }
+        public ICollection<TestAppointment> TestAppointments { get; set; } = new List<TestAppointment>();
     }
 }

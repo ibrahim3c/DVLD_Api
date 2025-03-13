@@ -8,9 +8,8 @@ namespace DVLD.Core.DTOs
         public DateTime AppDate { get; set; } = DateTime.UtcNow;
         public string AppStatus { get; set; } = AppStatuses.Pending; 
         public decimal AppFee { get; set; }
-        public string ApplicantName { get; set; }  
-        public string? LicenseClass { get; set; }
-
-       
+        public string ApplicantName { get; set; }
+        public string NationalNumber { get; set; }
+        public string? LicenseClass { get; set; }      
     }
 }

@@ -8,6 +8,6 @@
         public int MinAge {  get; set; }
         public int ValidityPeriod {  get; set; }
         public decimal Fee {  get; set; }
-        public ICollection<Application>? Applications { get; set; }=new List<Application>();
+        public ICollection<Application> Applications { get; set; }=new List<Application>();
     }
 }

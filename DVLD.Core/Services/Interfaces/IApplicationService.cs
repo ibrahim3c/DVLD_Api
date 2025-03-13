@@ -12,6 +12,11 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result> DeleteAppTypeAsync(int id);
         Task<Result<int>> AddAppTypeAync(TypeDTO appTypeDTO);
 
+        // application
+        Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id);
+        Task<Result> DeleteApplicationAsync(int id);
+        Task<Result> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO);
+        Task<Result<IEnumerable<ApplicationDTO>>>GetAllApplicationWithStatusAsync(string status);
         // NewLocalDrivingLicense
         Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
         Task<Result> ApproveTheApplicationAsync(int appId);
