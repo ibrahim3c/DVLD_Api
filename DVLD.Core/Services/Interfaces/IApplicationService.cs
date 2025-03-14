@@ -21,6 +21,11 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
         Task<Result> ApproveTheApplicationAsync(int appId);
         Task<Result> RejectTheApplicationAsync(int appId);
+        // Test
+        Task<Result<int>> ScheduleVisionTestAsync(int appId,int applicantId);
+        Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId);
+        Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId);
+
 
     }
 }

@@ -14,15 +14,16 @@ namespace DVLD.Core.Services.Implementations
         {
             this.uow = uow;
         }
-        // applicationType
-        public async Task<Result<int>> AddAppTypeAync( TypeDTO appTypeDTO)
+        #region ManageApplicationTypes
+        public async Task<Result<int>> AddAppTypeAync(TypeDTO appTypeDTO)
         {
             var errors = ObjectValidator.Validate<TypeDTO>(appTypeDTO);
             if (await IsTitleTaken(appTypeDTO.Title))
             {
-                errors.Add( "this title is already exist");
+                errors.Add("this title is already exist");
             }
-            if (errors.Any()) {
+            if (errors.Any())
+            {
                 return Result<int>.Failure(errors);
             }
 
@@ -32,7 +33,7 @@ namespace DVLD.Core.Services.Implementations
                 Title = appTypeDTO.Title,
                 TypeFee = appTypeDTO.TypeFee
             };
-           await uow.appTypeRepository.AddAsync(appType);
+            await uow.appTypeRepository.AddAsync(appType);
             uow.Complete();
             return Result<int>.Success(appType.Id);
         }
@@ -53,7 +54,7 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result<IEnumerable<TypeDTO>>> GetAllAppTypesAsync()
         {
-            if( ! await uow.appTypeRepository.AnyAsync())
+            if (!await uow.appTypeRepository.AnyAsync())
             {
                 return Result<IEnumerable<TypeDTO>>.Failure(["No Application Types Found"]);
             }
@@ -110,18 +111,20 @@ namespace DVLD.Core.Services.Implementations
             appType.TypeFee = appTypeDTO.TypeFee;
 
             uow.appTypeRepository.Update(appType);
-             uow.Complete();
+            uow.Complete();
 
             return Result.Success();
         }
 
-        // application
+        #endregion
+
+        #region ManageApps
         public async Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id)
         {
             var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id, ["Applicant", "AppType", "LicenseClass"]);
             if (app == null)
                 return Result<ApplicationDTO>.Failure(["Application not Found"]);
-            var fullName= app.Applicant.Fname??"" + " " + app.Applicant.Sname??"" + " " + app.Applicant.Tname??"" + " " + app.Applicant.Lname??"";
+            var fullName = app.Applicant.Fname ?? "" + " " + app.Applicant.Sname ?? "" + " " + app.Applicant.Tname ?? "" + " " + app.Applicant.Lname ?? "";
             var appDTO = new ApplicationDTO
             {
                 AppDate = app.AppDate,
@@ -149,7 +152,7 @@ namespace DVLD.Core.Services.Implementations
                     LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                     NationalNumber = app.Applicant.NationalNo
                 });
-            if(apps!=null)
+            if (apps != null)
                 return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
             return Result<IEnumerable<ApplicationDTO>>.Success(apps);
 
@@ -170,8 +173,8 @@ namespace DVLD.Core.Services.Implementations
                 return Result.Failure(["Application not Found"]);
 
             app.AppStatus = updateApplicationDTO.AppStatus;
-            app.AppDate=updateApplicationDTO.AppDate;
-            var appType=await GetAppTypeByIdAsync(updateApplicationDTO.AppTypeId);
+            app.AppDate = updateApplicationDTO.AppDate;
+            var appType = await GetAppTypeByIdAsync(updateApplicationDTO.AppTypeId);
             if (appType == null)
                 return Result.Failure(["InValid Application Type"]);
 
@@ -183,7 +186,19 @@ namespace DVLD.Core.Services.Implementations
             return Result.Success();
         }
         // NewLocalDrivingLicense
-        public async Task<Result<int>>ApplyForNewLocalDrivingLincense(int applicantId,int licenseClassId)
+        public async Task<Result> ApproveTheApplicationAsync(int appId)
+        {
+            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Approved);
+        }
+        public async Task<Result> RejectTheApplicationAsync(int appId)
+        {
+            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Rejected);
+        }
+
+        #endregion
+
+        #region LocalAppLicense
+        public async Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int licenseClassId)
         {
             if (!await uow.ApplicantRepository.AnyAsync(x => x.ApplicantId == applicantId))
                 return Result<int>.Failure(["this applicant is not found!"]);
@@ -192,12 +207,14 @@ namespace DVLD.Core.Services.Implementations
                 return Result<int>.Failure(["this License Class is not found!"]);
 
             if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.NewLocalDrivingLicense
-                                                          && x.ApplicantId==applicantId
-                                                          && x.LicenseClassId == licenseClassId 
+                                                          && x.ApplicantId == applicantId
+                                                          && x.LicenseClassId == licenseClassId
                                                           && x.AppStatus == AppStatuses.Pending))
+
                 return Result<int>.Failure(["U already have a pending application for this license class."]);
 
             //TODO:check if he already has license with same class
+
             // Get the application fee
             var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
             if (appType == null)
@@ -214,16 +231,118 @@ namespace DVLD.Core.Services.Implementations
             };
             await uow.ApplicationRepository.AddAsync(application);
             uow.Complete();
-                return Result<int>.Success(application.AppID);
+            return Result<int>.Success(application.AppID);
         }
-        public async Task<Result> ApproveTheApplicationAsync(int appId)
+
+        public async Task<Result<int>> ScheduleVisionTestAsync(int appId, int applicantId)
         {
-            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Approved);            
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            && a.ApplicantId == applicantId
+            && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            //check if he not already has same Schedule for same type
+            if (await uow.TestAppointmentRepository.AnyAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.VisionTest))
+                return Result<int>.Failure(["You already have a scheduled test for this application!"]);
+            //add new appointment
+            TestAppointment testAppointment = new()
+            {
+                ApplicationId = appId,
+                IsLooked = false,
+                // i make the default is week after he Schedule
+                AppointmentDate = DateTime.Now.AddDays(7),
+                PaidFee = (await uow.testTypeRepository.GetByIdAsync(1)).TypeFee,
+                TestTypeId = (int)TestTypes.VisionTest
+            };
+
+            await uow.TestAppointmentRepository.AddAsync(testAppointment);
+            uow.Complete();
+            return Result<int>.Success(testAppointment.Id);
         }
-        public async Task<Result> RejectTheApplicationAsync(int appId)
+
+        public async Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId)
         {
-            return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Rejected);
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                                                        && a.ApplicantId == applicantId
+                                                        && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            //check if he not already has same Schedule for same type
+            if (await uow.TestAppointmentRepository.AnyAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.WrittenTest))
+                return Result<int>.Failure(["You already have a scheduled test for this application!"]);
+
+            //check if he passed the visionTest
+            var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.VisionTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedVissionTest == null)
+                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Written Test!"]);
+
+            var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.WrittenTest);
+            if (testType == null)
+                return Result<int>.Failure(["Test type not found!"]);
+            //add new appointment
+            TestAppointment testAppointment = new()
+            {
+                ApplicationId = appId,
+                IsLooked = false,
+                // i make the default is week after he Schedule
+                AppointmentDate = DateTime.Now.AddDays(7),
+                PaidFee = testType.TypeFee,
+                TestTypeId = (int)TestTypes.WrittenTest
+            };
+
+            await uow.TestAppointmentRepository.AddAsync(testAppointment);
+            uow.Complete();
+            return Result<int>.Success(testAppointment.Id);
         }
+
+        public async Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                                                        && a.ApplicantId == applicantId
+                                                        && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            //check if he not already has same Schedule for same type
+            if (await uow.TestAppointmentRepository.AnyAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.PracticalTest))
+                return Result<int>.Failure(["You already have a scheduled test for this application!"]);
+
+            //check if he passed the visionTest
+            var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.VisionTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedVissionTest == null)
+                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Written Test!"]);
+
+            //check if he passed the writtenTest
+            var hasPassedWrittenTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.WrittenTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedWrittenTest == null)
+                return Result<int>.Failure(["You must pass the Written Test before scheduling the Practical Test!"]);
+
+            var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.PracticalTest);
+            if (testType == null)
+                return Result<int>.Failure(["Test type not found!"]);
+            //add new appointment
+            TestAppointment testAppointment = new()
+            {
+                ApplicationId = appId,
+                IsLooked = false,
+                // i make the default is week after he Schedule
+                AppointmentDate = DateTime.Now.AddDays(7),
+                PaidFee = testType.TypeFee,
+                TestTypeId = (int)TestTypes.PracticalTest
+            };
+
+            await uow.TestAppointmentRepository.AddAsync(testAppointment);
+            uow.Complete();
+            return Result<int>.Success(testAppointment.Id);
+        }
+
+
+        #endregion
 
     }
 }
