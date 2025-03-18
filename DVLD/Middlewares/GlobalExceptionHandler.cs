@@ -13,7 +13,7 @@ namespace DVLD.Api.Middlewares
         {
             try
             {
-
+               await _next.Invoke(httpContext);
             }
             catch (Exception ex)
             {
@@ -43,7 +43,7 @@ namespace DVLD.Api.Middlewares
             {
                 StatusCode = statusCode,
                 Message = message,
-                // Detail = ex.Message // Hide this in production for security reasons
+                 Detail = ex.Message // Hide this in production for security reasons
             };
 
             await context.Response.WriteAsJsonAsync(response);
