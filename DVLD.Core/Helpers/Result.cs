@@ -28,7 +28,7 @@
             private Result(bool isSuccess, List<string>? errors = null)
             {
                 IsSuccess = isSuccess;
-                errors = errors ?? new List<string>();
+                this.errors = errors ?? new List<string>();
             }
 
             // Factory Method for Success

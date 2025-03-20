@@ -106,10 +106,21 @@ namespace DVLD.Api.Controllers
         {
             var result = await applicationService.ApplyForNewLocalDrivingLincense(applicantId, classLicensId);
             if (result.IsSuccess)
-                //change this to created after we did getApplicantionByIdAsync
+                //return Ok(result);
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllLocalAppsLicense")]
+        public async Task<IActionResult> GetAllLocalApplicationsLicense()
+        {
+            var result = await applicationService.GetAllLocalApplicationsLicense();
+            if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
         }
+
+
         //Test
         [HttpPost("ScheduleVisionTest")]
         public async Task<IActionResult> ScheduleVisionTest(int appId, int applicantId)
@@ -137,6 +148,23 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [HttpPut("UpdateTestAppointment")]
+        public async Task<IActionResult> UpdateTestAppointment(int appointmentId,EditTestAppointmentDTO editTestAppointmentDTO)
+        {
+            var result = await applicationService.EditTestAppointmentAsync(appointmentId, editTestAppointmentDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("TakeTest")]
+        public async Task<IActionResult>TakeTestAsync(CompleteTestDTO completeTestDTO)
+        {
+            var result =await applicationService.CompleteTestAsync(completeTestDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
         #endregion
 
 

@@ -198,6 +198,7 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationWithStatusAsync(string status)
         {
+             status = status.Trim('"');
             if (!AppStatuses.IsValidStatus(status))
                 return Result<IEnumerable<ApplicationDTO>>.Failure(["Invalid status"]);
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppStatus == status, ["Applicant", "AppType", "LicenseClass"])
@@ -373,7 +374,7 @@ namespace DVLD.Core.Services.Implementations
             var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
             && x.TestTypeId == (int)TestTypes.VisionTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
             if (hasPassedVissionTest == null)
-                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Written Test!"]);
+                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Practical Test!"]);
 
             //check if he passed the writtenTest
             var hasPassedWrittenTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
@@ -400,6 +401,61 @@ namespace DVLD.Core.Services.Implementations
             return Result<int>.Success(testAppointment.Id);
         }
 
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllLocalApplicationsLicense()
+        {
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass"]))
+                .Select(x => new ApplicationDTO
+                {
+                    AppDate = x.AppDate,
+                    AppFee = x.AppFee,
+                    ApplicantName = $"{x.Applicant.Fname??""} {x.Applicant.Sname ?? ""} {x.Applicant.Tname ?? ""} {x.Applicant.Lname ?? ""}",
+                    ApplicationType = x.AppType.Title,
+                    AppStatus = x.AppStatus,
+                    LicenseClass = x.LicenseClass!.Name,
+                    NationalNumber = x.Applicant.NationalNo
+                });
+            if (!apps.Any())
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Applications Found"]);
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+        }
+
+        public async Task<Result>EditTestAppointmentAsync(int testAppointmentId,EditTestAppointmentDTO editTestAppointmentDTO)
+        {
+            var testAppointment = await uow.TestAppointmentRepository.FindAsync(t => t.Id == testAppointmentId, ["Test"]);
+            if (testAppointment is null)
+                return Result.Failure(["no Test Appointment Found"]);
+            if(testAppointment.IsLooked)
+                return Result.Failure(["This Appoinment is already finished"]);
+
+            testAppointment.Test.TestResult = editTestAppointmentDTO.TestResult;
+            testAppointment.Test.Notes=editTestAppointmentDTO.Notes;
+            testAppointment.AppointmentDate = editTestAppointmentDTO.AppointmentDate;
+
+            uow.TestAppointmentRepository.Update(testAppointment);
+            uow.Complete();
+            return Result.Success();
+        }
+
+        public async Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO)
+        {
+            var testAppointment = await uow.TestAppointmentRepository.FindAsync( a => a.Id == completeTestDTO.TestAppointmentId);
+            if (testAppointment is null)
+                return Result.Failure(["No Test Appointment Found"]);
+            if (testAppointment.IsLooked)
+                return Result.Failure(["u already completed this Test"]);
+
+            testAppointment.IsLooked = true;
+            Test test = new Test
+            {
+                TestAppointmentId = completeTestDTO.TestAppointmentId,
+                TestResult = completeTestDTO.TestResult,
+                Notes = completeTestDTO.Notes
+            };
+
+           await uow.TestRepository.AddAsync(test);
+           uow.Complete();
+           return Result.Success();     
+         }
         #endregion
 
     }
