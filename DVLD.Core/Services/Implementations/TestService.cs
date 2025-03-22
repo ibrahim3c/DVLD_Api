@@ -15,6 +15,7 @@ namespace DVLD.Core.Services.Implementations
             this.uow = uow;
         }
 
+        #region TestType
         public async Task<Result<int>> AddTestTypeAync(TypeDTO testTypeDTO)
         {
             var errors = ObjectValidator.Validate<TypeDTO>(testTypeDTO);
@@ -120,5 +121,220 @@ namespace DVLD.Core.Services.Implementations
 
             return Result.Success();
         }
+
+
+        #endregion
+
+
+        #region Test And TestAppointment
+        public async Task<Result<int>> ScheduleVisionTestAsync(int appId, int applicantId)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            && a.ApplicantId == applicantId
+            && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            // Check if the applicant already has a scheduled test of the same type:
+            // - If an appointment exists but the test has not been taken → "You already have an active test appointment."
+            // - If the test was taken but failed → Schedule a retake test.
+            // - If the test was taken and passed → "You have already passed this test."
+
+            var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.VisionTest, ["Test"]);
+
+            if (appointment != null)
+            {
+                //  If test is scheduled but not taken yet
+                if (appointment.Test == null)
+                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+
+                //  If test was passed, no need to retake
+                if (appointment.Test.TestResult)
+                    return Result<int>.Failure(["You already passed this test."]);
+
+                //  If test was failed, schedule a retake test
+                //TODO:
+                //return await ScheduleRetakeTestAsync(appId, applicantId);
+                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
+            }
+
+            else
+            {
+                //add new appointment
+                TestAppointment testAppointment = new()
+                {
+                    ApplicationId = appId,
+                    IsLooked = false,
+                    // i make the default is week after he Schedule
+                    AppointmentDate = DateTime.Now.AddDays(7),
+                    PaidFee = (await uow.testTypeRepository.GetByIdAsync(1)).TypeFee,
+                    TestTypeId = (int)TestTypes.VisionTest
+                };
+
+                await uow.TestAppointmentRepository.AddAsync(testAppointment);
+                uow.Complete();
+                return Result<int>.Success(testAppointment.Id);
+            }
+
+        }
+
+        public async Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                                                        && a.ApplicantId == applicantId
+                                                        && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            // Check if the applicant already has a scheduled test of the same type:
+            // - If an appointment exists but the test has not been taken → "You already have an active test appointment."
+            // - If the test was taken but failed → Schedule a retake test.
+            // - If the test was taken and passed → "You have already passed this test."
+
+            var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.WrittenTest, ["Test"]);
+
+            if (appointment != null)
+            {
+                //  If test is scheduled but not taken yet
+                if (appointment.Test == null)
+                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+
+                //  If test was passed, no need to retake
+                if (appointment.Test.TestResult)
+                    return Result<int>.Failure(["You already passed this test."]);
+
+                //  If test was failed, schedule a retake test
+                //TODO:
+                //return await ScheduleRetakeTestAsync(appId, applicantId);
+                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
+            }
+
+
+            //check if he passed the visionTest
+            var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.VisionTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedVissionTest == null)
+                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Written Test!"]);
+
+            var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.WrittenTest);
+            if (testType == null)
+                return Result<int>.Failure(["Test type not found!"]);
+            //add new appointment
+            TestAppointment testAppointment = new()
+            {
+                ApplicationId = appId,
+                IsLooked = false,
+                // i make the default is week after he Schedule
+                AppointmentDate = DateTime.Now.AddDays(7),
+                PaidFee = testType.TypeFee,
+                TestTypeId = (int)TestTypes.WrittenTest
+            };
+
+            await uow.TestAppointmentRepository.AddAsync(testAppointment);
+            uow.Complete();
+            return Result<int>.Success(testAppointment.Id);
+        }
+
+        public async Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                                                        && a.ApplicantId == applicantId
+                                                        && a.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+
+            // Check if the applicant already has a scheduled test of the same type:
+            // - If an appointment exists but the test has not been taken → "You already have an active test appointment."
+            // - If the test was taken but failed → Schedule a retake test.
+            // - If the test was taken and passed → "You have already passed this test."
+
+            var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)TestTypes.PracticalTest, ["Test"]);
+
+            if (appointment != null)
+            {
+                //  If test is scheduled but not taken yet
+                if (appointment.Test == null)
+                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+
+                //  If test was passed, no need to retake
+                if (appointment.Test.TestResult)
+                    return Result<int>.Failure(["You already passed this test."]);
+
+                //  If test was failed, schedule a retake test
+                //TODO:
+                //return await ScheduleRetakeTestAsync(appId, applicantId);
+                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
+            }
+
+            //check if he passed the visionTest
+            var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.VisionTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedVissionTest == null)
+                return Result<int>.Failure(["You must pass the Vision Test before scheduling the Practical Test!"]);
+
+            //check if he passed the writtenTest
+            var hasPassedWrittenTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
+            && x.TestTypeId == (int)TestTypes.WrittenTest && x.IsLooked && x.Test != null && x.Test.TestResult, ["Test"]);
+            if (hasPassedWrittenTest == null)
+                return Result<int>.Failure(["You must pass the Written Test before scheduling the Practical Test!"]);
+
+            var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.PracticalTest);
+            if (testType == null)
+                return Result<int>.Failure(["Test type not found!"]);
+            //add new appointment
+            TestAppointment testAppointment = new()
+            {
+                ApplicationId = appId,
+                IsLooked = false,
+                // i make the default is week after he Schedule
+                AppointmentDate = DateTime.Now.AddDays(7),
+                PaidFee = testType.TypeFee,
+                TestTypeId = (int)TestTypes.PracticalTest
+            };
+
+            await uow.TestAppointmentRepository.AddAsync(testAppointment);
+            uow.Complete();
+            return Result<int>.Success(testAppointment.Id);
+        }
+
+        public async Task<Result> EditTestAppointmentAsync(int testAppointmentId, EditTestAppointmentDTO editTestAppointmentDTO)
+        {
+            var testAppointment = await uow.TestAppointmentRepository.FindAsync(t => t.Id == testAppointmentId, ["Test"]);
+            if (testAppointment is null)
+                return Result.Failure(["no Test Appointment Found"]);
+            if (testAppointment.IsLooked)
+                return Result.Failure(["This Appoinment is already finished"]);
+
+            testAppointment.Test.TestResult = editTestAppointmentDTO.TestResult;
+            testAppointment.Test.Notes = editTestAppointmentDTO.Notes;
+            testAppointment.AppointmentDate = editTestAppointmentDTO.AppointmentDate;
+
+            uow.TestAppointmentRepository.Update(testAppointment);
+            uow.Complete();
+            return Result.Success();
+        }
+
+        public async Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO)
+        {
+            var testAppointment = await uow.TestAppointmentRepository.FindAsync(a => a.Id == completeTestDTO.TestAppointmentId);
+            if (testAppointment is null)
+                return Result.Failure(["No Test Appointment Found"]);
+            if (testAppointment.IsLooked)
+                return Result.Failure(["u already completed this Test"]);
+
+            testAppointment.IsLooked = true;
+            Test test = new Test
+            {
+                TestAppointmentId = completeTestDTO.TestAppointmentId,
+                TestResult = completeTestDTO.TestResult,
+                Notes = completeTestDTO.Notes
+            };
+
+            await uow.TestRepository.AddAsync(test);
+            uow.Complete();
+            return Result.Success();
+        } 
+        #endregion
+
     }
 }

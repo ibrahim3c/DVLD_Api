@@ -11,10 +11,12 @@ namespace DVLD.Api.Controllers
     public class ApplicationsController:ControllerBase
     {
         private readonly IApplicationService applicationService;
+        private readonly ITestService testService;
 
-        public ApplicationsController(IApplicationService applicationService)
+        public ApplicationsController(IApplicationService applicationService, ITestService testService)
         {
             this.applicationService = applicationService;
+            this.testService = testService;
         }
         #region ManageApps
         [HttpGet]
@@ -125,7 +127,7 @@ namespace DVLD.Api.Controllers
         [HttpPost("ScheduleVisionTest")]
         public async Task<IActionResult> ScheduleVisionTest(int appId, int applicantId)
         {
-            var result = await applicationService.ScheduleVisionTestAsync(appId, applicantId);
+            var result = await testService.ScheduleVisionTestAsync(appId, applicantId);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -134,7 +136,7 @@ namespace DVLD.Api.Controllers
         [HttpPost("ScheduleWrittenTest")]
         public async Task<IActionResult> ScheduleWrittenTest(int appId, int applicantId)
         {
-            var result = await applicationService.ScheduleWrittenTestAsync(appId, applicantId);
+            var result = await testService.ScheduleWrittenTestAsync(appId, applicantId);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -142,7 +144,7 @@ namespace DVLD.Api.Controllers
         [HttpPost("SchedulePracticalTest")]
         public async Task<IActionResult> SchedulePracticalTest(int appId, int applicantId)
         {
-            var result = await applicationService.SchedulePracticalTestAsync(appId, applicantId);
+            var result = await testService.SchedulePracticalTestAsync(appId, applicantId);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -151,7 +153,7 @@ namespace DVLD.Api.Controllers
         [HttpPut("UpdateTestAppointment")]
         public async Task<IActionResult> UpdateTestAppointment(int appointmentId,EditTestAppointmentDTO editTestAppointmentDTO)
         {
-            var result = await applicationService.EditTestAppointmentAsync(appointmentId, editTestAppointmentDTO);
+            var result = await testService.EditTestAppointmentAsync(appointmentId, editTestAppointmentDTO);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -160,7 +162,7 @@ namespace DVLD.Api.Controllers
         [HttpPost("TakeTest")]
         public async Task<IActionResult>TakeTestAsync(CompleteTestDTO completeTestDTO)
         {
-            var result =await applicationService.CompleteTestAsync(completeTestDTO);
+            var result =await testService.CompleteTestAsync(completeTestDTO);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);

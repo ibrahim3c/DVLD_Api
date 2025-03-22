@@ -5,9 +5,11 @@ namespace DVLD.Api.Middlewares
     public class GlobalExceptionHandler
     {
         private RequestDelegate _next;
-        public GlobalExceptionHandler(RequestDelegate next)
+        private ILogger _logger;
+        public GlobalExceptionHandler(RequestDelegate next, ILogger logger)
         {
             _next = next;
+            _logger = logger;
         }
         public async Task Invoke(HttpContext httpContext)
         {
@@ -37,6 +39,7 @@ namespace DVLD.Api.Middlewares
                 _ => ((int)HttpStatusCode.InternalServerError, "An unexpected error occurred.")
             };
 
+            _logger.LogError(ex, "Exception occurred: {Message} | Status Code: {StatusCode}", message, statusCode);
             context.Response.StatusCode = statusCode;
 
             var response = new

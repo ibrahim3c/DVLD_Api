@@ -20,18 +20,13 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<IEnumerable<ApplicationDTO>>>GetAllApplicationWithStatusAsync(string status);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByNationalNoAsync(string nationalNo);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByIdAsync(int applicantId);
-        // NewLocalDrivingLicense
-        Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
         Task<Result> ApproveTheApplicationAsync(int appId);
         Task<Result> RejectTheApplicationAsync(int appId);
+
+        // NewLocalDrivingLicense
+        Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllLocalApplicationsLicense();
 
-        // Tests
-        Task<Result<int>> ScheduleVisionTestAsync(int appId,int applicantId);
-        Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId);
-        Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId);
-        Task<Result> EditTestAppointmentAsync(int testAppointmentId, EditTestAppointmentDTO editTestAppointmentDTO);
-        Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO);
 
        
 
