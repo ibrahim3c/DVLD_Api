@@ -9,6 +9,8 @@
         ILicenseClassRepository LicenseClassRepository { get;}
         ITestAppointmentRepository TestAppointmentRepository { get;}
         ITestRepository TestRepository { get;}
+        IDriverRepository DriverRepository { get;}
+        ILicenseRepository LicenseRepository { get;}
         int Complete();
     }
 }

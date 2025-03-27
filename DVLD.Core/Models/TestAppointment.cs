@@ -7,6 +7,7 @@
         public decimal PaidFee {  get; set; }
         public bool IsLooked {  get; set; }
         public int ApplicationId {  get; set; }
+        public int? RetakeTestAppId {  get; set; }
         public int TestTypeId {  get; set; }
 
         public Application Application { get; set; }

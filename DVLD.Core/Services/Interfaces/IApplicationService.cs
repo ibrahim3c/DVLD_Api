@@ -25,10 +25,19 @@ namespace DVLD.Core.Services.Interfaces
 
         // NewLocalDrivingLicense
         Task<Result<int>> ApplyForNewLocalDrivingLincense(int applicantId, int LicenseClassId);
-        Task<Result<IEnumerable<ApplicationDTO>>> GetAllLocalApplicationsLicense();
+        Task<Result<LocalAppLicenseDTO>> GetLocalAppLicenseByIdAsync(int id);
+        Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesAsync();
+        Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesWithsByNationalNoAsync(string nationalNo);
+        Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesByApplicantIdAsync(int applicantId);
 
 
-       
+
+        // retakeTestApp
+        Task<Result<int>> ApplyForRetakeTestApp(int applicantId);
+
+
+
+
 
 
 

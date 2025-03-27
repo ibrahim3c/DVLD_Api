@@ -8,7 +8,7 @@ namespace DVLD.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ApplicationsController:ControllerBase
+    public class ApplicationsController : ControllerBase
     {
         private readonly IApplicationService applicationService;
         private readonly ITestService testService;
@@ -29,7 +29,7 @@ namespace DVLD.Api.Controllers
         }
 
         [HttpGet("ApplicantApplicationByNationalNo")]
-        public async Task<IActionResult> GetAllApplicantApplicationsByNationalNoAsync([FromQuery]string nationalNo)
+        public async Task<IActionResult> GetAllApplicantApplicationsByNationalNoAsync([FromQuery] string nationalNo)
         {
             var result = await applicationService.GetAllApplicantApplicationsByNationalNoAsync(nationalNo);
             if (result.IsSuccess)
@@ -48,7 +48,7 @@ namespace DVLD.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetApplicationByIdAsync(int id )
+        public async Task<IActionResult> GetApplicationByIdAsync(int id)
         {
             var result = await applicationService.GetApplicationByIdAsync(id);
             if (result.IsSuccess)
@@ -57,7 +57,7 @@ namespace DVLD.Api.Controllers
         }
 
         [HttpGet("status")]
-        public async Task<IActionResult> GetAllApplicationsOfStatusAsync([FromQuery]string status)
+        public async Task<IActionResult> GetAllApplicationsOfStatusAsync([FromQuery] string status)
         {
             var result = await applicationService.GetAllApplicationWithStatusAsync(status);
             if (result.IsSuccess)
@@ -73,9 +73,9 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateApplicationAsync(int id ,UpdateApplicationDTO updateApplicationDTO)
+        public async Task<IActionResult> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO)
         {
-            var result = await applicationService.UpdateApplicationAsync(id,updateApplicationDTO);
+            var result = await applicationService.UpdateApplicationAsync(id, updateApplicationDTO);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -116,12 +116,41 @@ namespace DVLD.Api.Controllers
         [HttpGet("GetAllLocalAppsLicense")]
         public async Task<IActionResult> GetAllLocalApplicationsLicense()
         {
-            var result = await applicationService.GetAllLocalApplicationsLicense();
+            var result = await applicationService.GetAllLocalAppLicensesAsync();
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
         }
 
+
+        [HttpGet("GetLocalAppLicenseByIdAsync/{id}")]
+        public async Task<IActionResult> GetLocalAppLicenseByIdAsync(int id)
+        {
+            var result = await applicationService.GetLocalAppLicenseByIdAsync(id);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        [HttpGet("GetAllLocalAppLicensesByNationalNoAsync")]
+        public async Task<IActionResult> GetAllLocalAppLicensesWithsByNationalNoAsync([FromQuery] string nationalNo)
+        {
+            var result = await applicationService.GetAllLocalAppLicensesWithsByNationalNoAsync(nationalNo);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllLocalAppLicensesByApplicantIdAsync/{applicantId}" )]
+        public async Task<IActionResult> GetAllLocalAppLicensesByApplicantIdAsync(int applicantId)
+        {
+            var result = await applicationService.GetAllLocalAppLicensesByApplicantIdAsync(applicantId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
 
         //Test
         [HttpPost("ScheduleVisionTest")]

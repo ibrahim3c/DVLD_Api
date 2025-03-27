@@ -8,7 +8,7 @@
      ReplacementForDamagedDrivingLicense,
      ReleaseDetainedDrivingLicense,
      NewInternationalDrivingLicense,
-     ApplyForInternationalDrivingLicense,
      RetakeTest
      }
 }
+    

@@ -29,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IApplicantService, ApplicantService>();
         services.AddScoped<IApplicationService, ApplicationService>();
+        services.AddScoped<IDriverServices, DriverService>();
+        services.AddScoped<ILicenseService, LicenseService>();
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IMailingService, MainlingService>();

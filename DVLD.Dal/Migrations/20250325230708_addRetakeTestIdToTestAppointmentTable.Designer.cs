@@ -4,6 +4,7 @@ using DVLD.Dal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DVLD.Dal.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250325230708_addRetakeTestIdToTestAppointmentTable")]
+    partial class addRetakeTestIdToTestAppointmentTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -727,78 +730,6 @@ namespace DVLD.Dal.Migrations
                         });
                 });
 
-            modelBuilder.Entity("DVLD.Core.Models.Driver", b =>
-                {
-                    b.Property<int>("DriverId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DriverId"));
-
-                    b.Property<int>("applicantId")
-                        .HasColumnType("int");
-
-                    b.HasKey("DriverId");
-
-                    b.HasIndex("applicantId")
-                        .IsUnique();
-
-                    b.ToTable("Drivers", (string)null);
-                });
-
-            modelBuilder.Entity("DVLD.Core.Models.License", b =>
-                {
-                    b.Property<int>("LicenseId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LicenseId"));
-
-                    b.Property<int>("AppId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("DriverId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsValid")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("IssueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("IssueReason")
-                        .HasMaxLength(255)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("LicenseClassId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("PaidFees")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("LicenseId");
-
-                    b.HasIndex("AppId")
-                        .IsUnique();
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DriverId");
-
-                    b.HasIndex("LicenseClassId");
-
-                    b.ToTable("Licenses", (string)null);
-                });
-
             modelBuilder.Entity("DVLD.Core.Models.LicenseClass", b =>
                 {
                     b.Property<int>("Id")
@@ -1195,52 +1126,6 @@ namespace DVLD.Dal.Migrations
                     b.Navigation("LicenseClass");
                 });
 
-            modelBuilder.Entity("DVLD.Core.Models.Driver", b =>
-                {
-                    b.HasOne("DVLD.Core.Models.Applicant", "Applicant")
-                        .WithOne()
-                        .HasForeignKey("DVLD.Core.Models.Driver", "applicantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Applicant");
-                });
-
-            modelBuilder.Entity("DVLD.Core.Models.License", b =>
-                {
-                    b.HasOne("DVLD.Core.Models.Application", "Application")
-                        .WithOne()
-                        .HasForeignKey("DVLD.Core.Models.License", "AppId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DVLD.Core.Models.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DVLD.Core.Models.Driver", "Driver")
-                        .WithMany("Licenses")
-                        .HasForeignKey("DriverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DVLD.Core.Models.LicenseClass", "LicenseClass")
-                        .WithMany()
-                        .HasForeignKey("LicenseClassId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Application");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("Driver");
-
-                    b.Navigation("LicenseClass");
-                });
-
             modelBuilder.Entity("DVLD.Core.Models.Test", b =>
                 {
                     b.HasOne("DVLD.Core.Models.TestAppointment", "TestAppointment")
@@ -1343,11 +1228,6 @@ namespace DVLD.Dal.Migrations
             modelBuilder.Entity("DVLD.Core.Models.Country", b =>
                 {
                     b.Navigation("Applicants");
-                });
-
-            modelBuilder.Entity("DVLD.Core.Models.Driver", b =>
-                {
-                    b.Navigation("Licenses");
                 });
 
             modelBuilder.Entity("DVLD.Core.Models.LicenseClass", b =>

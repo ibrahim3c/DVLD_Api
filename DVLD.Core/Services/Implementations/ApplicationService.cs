@@ -126,6 +126,7 @@ namespace DVLD.Core.Services.Implementations
                 return Result<ApplicationDTO>.Failure(["Application not Found"]);
             var fullName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim();
 
+
             var appDTO = new ApplicationDTO
             {
                 AppDate = app.AppDate,
@@ -134,7 +135,7 @@ namespace DVLD.Core.Services.Implementations
                 ApplicantName = fullName,
                 ApplicationType = app.AppType.Title,
                 LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
-                NationalNumber = app.Applicant.NationalNo
+                NationalNumber = app.Applicant.NationalNo,
             };
             return Result<ApplicationDTO>.Success(appDTO);
         }
@@ -154,6 +155,7 @@ namespace DVLD.Core.Services.Implementations
                     LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                     NationalNumber = app.Applicant.NationalNo
                 });
+
             if (!apps.Any())
                 return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
             return Result<IEnumerable<ApplicationDTO>>.Success(apps);
@@ -292,11 +294,10 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(application.AppID);
         }
-
-        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllLocalApplicationsLicense()
+        public async Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesAsync()
         {
-            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass"]))
-                .Select(x => new ApplicationDTO
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass","TestAppointments.Test"]))
+                .Select(x => new LocalAppLicenseDTO
                 {
                     AppDate = x.AppDate,
                     AppFee = x.AppFee,
@@ -304,14 +305,117 @@ namespace DVLD.Core.Services.Implementations
                     ApplicationType = x.AppType.Title,
                     AppStatus = x.AppStatus,
                     LicenseClass = x.LicenseClass!.Name,
-                    NationalNumber = x.Applicant.NationalNo
+                    NationalNumber = x.Applicant.NationalNo,
+                    PassedTests=x.TestAppointments.Count(ta=>ta.Test !=null && ta.Test.TestResult)
+
                 });
             if (!apps.Any())
-                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Applications Found"]);
-            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Applications Found"]);
+            return Result<IEnumerable<LocalAppLicenseDTO>>.Success(apps);
+        }
+
+        public async Task<Result<LocalAppLicenseDTO>> GetLocalAppLicenseByIdAsync(int id)
+        {
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"]);
+            if (app == null)
+                return Result<LocalAppLicenseDTO>.Failure(["Application not Found"]);
+            var fullName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim();
+
+            int passedTests = 0;
+            if(app.TestAppointments.Any())
+                passedTests = app.TestAppointments.Count(ta => ta.Test != null && ta.Test.TestResult);
+
+            var appDTO = new LocalAppLicenseDTO
+            {
+                AppDate = app.AppDate,
+                AppFee = app.AppFee,
+                AppStatus = app.AppStatus,
+                ApplicantName = fullName,
+                ApplicationType = app.AppType.Title,
+                LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                NationalNumber = app.Applicant.NationalNo,
+                PassedTests= passedTests,
+            };
+            return Result<LocalAppLicenseDTO>.Success(appDTO);
+        }
+
+        public async Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesWithsByNationalNoAsync(string nationalNo)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.NationalNo == nationalNo))
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Applicant with this National Number"]);
+
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID==(int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"])
+                ).Select(app => new LocalAppLicenseDTO
+                {
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo,
+                    PassedTests = app.TestAppointments.Count(ta => ta.Test != null && ta.Test.TestResult)
+
+                });
+
+            if (!apps.Any())
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<LocalAppLicenseDTO>>.Success(apps);
+        }
+
+        public async Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesByApplicantIdAsync(int applicantId)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.ApplicantId == applicantId))
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Applicant with this National Number"]);
+
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"])
+                ).Select(app => new LocalAppLicenseDTO
+                {
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo,
+                    PassedTests = app.TestAppointments.Count(ta => ta.Test != null && ta.Test.TestResult)
+
+                });
+
+            if (!apps.Any())
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<LocalAppLicenseDTO>>.Success(apps);
         }
 
 
+
+        #endregion
+
+        #region RetakeTest
+        public async Task<Result<int>> ApplyForRetakeTestApp(int applicantId)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(x => x.ApplicantId == applicantId))
+                return Result<int>.Failure(["this applicant is not found!"]);
+
+           
+
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.RetakeTest);
+            if (appType == null)
+                return Result<int>.Failure(["Application type not found!"]);
+
+            var application = new Application
+            {
+                AppDate = DateTime.Now,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Approved,
+                AppTypeID = (int)AppTypes.RetakeTest,
+            };
+            await uow.ApplicationRepository.AddAsync(application);
+            uow.Complete();
+            return Result<int>.Success(application.AppID);
+        }
 
         #endregion
 

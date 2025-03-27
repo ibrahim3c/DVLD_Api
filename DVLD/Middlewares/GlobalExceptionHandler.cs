@@ -5,8 +5,8 @@ namespace DVLD.Api.Middlewares
     public class GlobalExceptionHandler
     {
         private RequestDelegate _next;
-        private ILogger _logger;
-        public GlobalExceptionHandler(RequestDelegate next, ILogger logger)
+        private ILogger<GlobalExceptionHandler> _logger;
+        public GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
         {
             _next = next;
             _logger = logger;

@@ -9,10 +9,12 @@ namespace DVLD.Core.Services.Implementations
     public class TestService:ITestService
     {
         private readonly IUOW uow;
+        private readonly IApplicationService applicationService;
 
-        public TestService(IUOW uow)
+        public TestService(IUOW uow,IApplicationService applicationService)
         {
             this.uow = uow;
+            this.applicationService = applicationService;
         }
 
         #region TestType
@@ -139,27 +141,30 @@ namespace DVLD.Core.Services.Implementations
             // - If the test was taken but failed → Schedule a retake test.
             // - If the test was taken and passed → "You have already passed this test."
 
+            var retakeAppId = 0;
             var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
                                                             && t.TestTypeId == (int)TestTypes.VisionTest, ["Test"]);
 
-            if (appointment != null)
+            if (appointment != null && appointment.Test == null)
             {
                 //  If test is scheduled but not taken yet
-                if (appointment.Test == null)
-                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+                return Result<int>.Failure(["You already have an active test appointment for this application!"]);
 
-                //  If test was passed, no need to retake
-                if (appointment.Test.TestResult)
-                    return Result<int>.Failure(["You already passed this test."]);
-
-                //  If test was failed, schedule a retake test
-                //TODO:
-                //return await ScheduleRetakeTestAsync(appId, applicantId);
-                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
+            }
+            //  If test was passed, no need to retake
+            else if (appointment != null && appointment.Test.TestResult)
+                return Result<int>.Failure(["You already passed this test."]);
+            else if(appointment != null &&!appointment.Test.TestResult)
+            {
+                var result = await applicationService.ApplyForRetakeTestApp(applicantId);
+                if (result.IsSuccess)
+                    retakeAppId = result.Value;
+                else
+                    return Result<int>.Failure(result.Errors);
             }
 
-            else
-            {
+
+
                 //add new appointment
                 TestAppointment testAppointment = new()
                 {
@@ -168,13 +173,14 @@ namespace DVLD.Core.Services.Implementations
                     // i make the default is week after he Schedule
                     AppointmentDate = DateTime.Now.AddDays(7),
                     PaidFee = (await uow.testTypeRepository.GetByIdAsync(1)).TypeFee,
-                    TestTypeId = (int)TestTypes.VisionTest
+                    TestTypeId = (int)TestTypes.VisionTest,
+                    RetakeTestAppId = retakeAppId
                 };
 
                 await uow.TestAppointmentRepository.AddAsync(testAppointment);
                 uow.Complete();
                 return Result<int>.Success(testAppointment.Id);
-            }
+
 
         }
 
@@ -193,21 +199,13 @@ namespace DVLD.Core.Services.Implementations
             var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
                                                             && t.TestTypeId == (int)TestTypes.WrittenTest, ["Test"]);
 
-            if (appointment != null)
-            {
+            if (appointment != null && appointment.Test == null)
                 //  If test is scheduled but not taken yet
-                if (appointment.Test == null)
-                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+                return Result<int>.Failure(["You already have an active test appointment for this application!"]);
 
-                //  If test was passed, no need to retake
-                if (appointment.Test.TestResult)
-                    return Result<int>.Failure(["You already passed this test."]);
-
-                //  If test was failed, schedule a retake test
-                //TODO:
-                //return await ScheduleRetakeTestAsync(appId, applicantId);
-                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
-            }
+            //  If test was passed, no need to retake
+            else if (appointment != null && appointment.Test.TestResult)
+                return Result<int>.Failure(["You already passed this test."]);
 
 
             //check if he passed the visionTest
@@ -216,9 +214,23 @@ namespace DVLD.Core.Services.Implementations
             if (hasPassedVissionTest == null)
                 return Result<int>.Failure(["You must pass the Vision Test before scheduling the Written Test!"]);
 
+            int retakeAppId = 0;
             var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.WrittenTest);
             if (testType == null)
                 return Result<int>.Failure(["Test type not found!"]);
+
+
+            else if (appointment != null && !appointment.Test.TestResult)
+            {
+                var result = await applicationService.ApplyForRetakeTestApp(applicantId);
+                if (result.IsSuccess)
+                    retakeAppId = result.Value;
+                else
+                    return Result<int>.Failure(result.Errors);
+            }
+
+
+
             //add new appointment
             TestAppointment testAppointment = new()
             {
@@ -227,7 +239,8 @@ namespace DVLD.Core.Services.Implementations
                 // i make the default is week after he Schedule
                 AppointmentDate = DateTime.Now.AddDays(7),
                 PaidFee = testType.TypeFee,
-                TestTypeId = (int)TestTypes.WrittenTest
+                TestTypeId = (int)TestTypes.WrittenTest,
+                RetakeTestAppId = retakeAppId
             };
 
             await uow.TestAppointmentRepository.AddAsync(testAppointment);
@@ -249,22 +262,13 @@ namespace DVLD.Core.Services.Implementations
 
             var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
                                                             && t.TestTypeId == (int)TestTypes.PracticalTest, ["Test"]);
-
-            if (appointment != null)
-            {
+            if (appointment != null && appointment.Test == null)
                 //  If test is scheduled but not taken yet
-                if (appointment.Test == null)
-                    return Result<int>.Failure(["You already have an active test appointment for this application!"]);
+                return Result<int>.Failure(["You already have an active test appointment for this application!"]);
 
-                //  If test was passed, no need to retake
-                if (appointment.Test.TestResult)
-                    return Result<int>.Failure(["You already passed this test."]);
-
-                //  If test was failed, schedule a retake test
-                //TODO:
-                //return await ScheduleRetakeTestAsync(appId, applicantId);
-                return Result<int>.Failure(["Retake Test Not Implemented Yet"]);
-            }
+            //  If test was passed, no need to retake
+            else if (appointment != null && appointment.Test.TestResult)
+                return Result<int>.Failure(["You already passed this test."]);
 
             //check if he passed the visionTest
             var hasPassedVissionTest = await uow.TestAppointmentRepository.FindAsync(x => x.ApplicationId == appId
@@ -278,9 +282,21 @@ namespace DVLD.Core.Services.Implementations
             if (hasPassedWrittenTest == null)
                 return Result<int>.Failure(["You must pass the Written Test before scheduling the Practical Test!"]);
 
+            var retakeAppId = 0;
             var testType = await uow.testTypeRepository.GetByIdAsync((int)TestTypes.PracticalTest);
             if (testType == null)
                 return Result<int>.Failure(["Test type not found!"]);
+
+
+            else if (appointment != null && !appointment.Test.TestResult)
+            {
+                var result = await applicationService.ApplyForRetakeTestApp(applicantId);
+                if (result.IsSuccess)
+                    retakeAppId = result.Value;
+                else
+                    return Result<int>.Failure(result.Errors);
+            }
+
             //add new appointment
             TestAppointment testAppointment = new()
             {
@@ -289,7 +305,8 @@ namespace DVLD.Core.Services.Implementations
                 // i make the default is week after he Schedule
                 AppointmentDate = DateTime.Now.AddDays(7),
                 PaidFee = testType.TypeFee,
-                TestTypeId = (int)TestTypes.PracticalTest
+                TestTypeId = (int)TestTypes.PracticalTest,
+                RetakeTestAppId = retakeAppId,
             };
 
             await uow.TestAppointmentRepository.AddAsync(testAppointment);

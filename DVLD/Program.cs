@@ -1,5 +1,6 @@
 using DVLD.Api;
 using DVLD.Api.Middlewares;
+using Serilog;
 
 namespace DVLD
 {
@@ -20,6 +21,16 @@ namespace DVLD
             //Add configuration from the secret.json file
             builder.Configuration.AddJsonFile("Secret.json", optional: false, reloadOnChange: true);
             builder.Services.AddServices(builder.Configuration);
+
+            //serilog;
+            builder.Host.UseSerilog((context, config) =>
+            {                              // read configs from appsettigns
+                config.ReadFrom.Configuration(context.Configuration);
+            });
+
+
+
+
             #endregion
 
             var app = builder.Build();
