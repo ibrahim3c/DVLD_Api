@@ -39,11 +39,7 @@ namespace DVLD.Dal.Configurations
                     .HasForeignKey(a => a.DriverId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-            // app with applicant
-            builder.HasOne(a => a.CreatedByUser)
-                    .WithMany()
-                    .HasForeignKey(a => a.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
+     
 
             builder.HasOne(a => a.Application)
                     .WithOne()

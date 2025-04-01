@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using DVLD.Core.Models;
 
 namespace DVLD.Core.IRepositories
 {

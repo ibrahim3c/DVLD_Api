@@ -30,8 +30,6 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesWithsByNationalNoAsync(string nationalNo);
         Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesByApplicantIdAsync(int applicantId);
 
-
-
         // retakeTestApp
         Task<Result<int>> ApplyForRetakeTestApp(int applicantId);
 

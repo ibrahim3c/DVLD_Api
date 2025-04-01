@@ -103,7 +103,7 @@ namespace DVLD.Core.Services.Implementations
             return Result.Failure(["Failed to delete the applicant."]);
         }
 
-        public async Task<Result<List<Applicant>>> GetApplicantsAsync(int pageNumber, int pageSize)
+        public async Task<Result<List<Applicant>>> GetDetailsApplicantsAsync(int pageNumber, int pageSize)
         {
             if (pageNumber <= 0)
                 return Result<List<Applicant>>.Failure(["Page Number must be greater than 0."]);
@@ -139,7 +139,7 @@ namespace DVLD.Core.Services.Implementations
             return Result<string>.Success(applicant.UserId);
         }
 
-        public async Task<Result<Applicant>> GetByIdAsync(int id)
+        public async Task<Result<Applicant>> GetDetailsByIdAsync(int id)
         {
             var applicant = await uOW.ApplicantRepository.GetByIdAsync(id);
             if (applicant == null)
@@ -149,7 +149,7 @@ namespace DVLD.Core.Services.Implementations
             return Result<Applicant>.Success(applicant);
         }
 
-        public async Task<Result<Applicant>> GetByNationalNoAsync(string nationalNo)
+        public async Task<Result<Applicant>> GetDetailsByNationalNoAsync(string nationalNo)
         {
             var applicant = await uOW.ApplicantRepository.FindAsync(x => x.NationalNo == nationalNo);
             if (applicant == null)
@@ -219,6 +219,79 @@ namespace DVLD.Core.Services.Implementations
             }
             var fullName=applicant.Fname +" "+ applicant.Sname+" "+applicant.Tname+" "+applicant.Lname;
             return Result<string>.Success(fullName);
+        }
+
+        public async Task<Result<GetApplicantDTO>> GetByIdAsync(int id)
+        {
+            var a = await uOW.ApplicantRepository.GetByIdAsync(id);
+            if (a == null)
+            {
+                return Result<GetApplicantDTO>.Failure(new List<string> { "There is no applicant with this id" });
+            }
+
+            var appDTO = new GetApplicantDTO
+            {
+                applicantId=a.ApplicantId,
+                Address = a.Address,
+                BirthDate = a.BirthDate,
+                CountryId = a.CountryId,
+                FullName = a.Fname + " " + a.Sname + " " + a.Tname + " " + a.Lname,
+                Gender = a.Gender,
+                NationalNo = a.NationalNo
+
+            };
+            return Result<GetApplicantDTO>.Success(appDTO);
+        }
+
+        public async Task<Result<GetApplicantDTO>> GetByNationalNoAsync(string nationalNo)
+        {
+
+            var a = await uOW.ApplicantRepository.FindAsync(x => x.NationalNo == nationalNo);
+            if (a == null)
+            {
+                return Result<GetApplicantDTO>.Failure(new List<string> { "there is no applicant with this nationalNo" });
+            }
+            var appDTO = new GetApplicantDTO
+            {
+                applicantId = a.ApplicantId,
+                Address = a.Address,
+                BirthDate = a.BirthDate,
+                CountryId = a.CountryId,
+                FullName =a.Fname + " " + a.Sname + " " + a.Tname + " " + a.Lname,
+                Gender = a.Gender,
+                NationalNo = a.NationalNo
+                
+            };
+            return Result<GetApplicantDTO>.Success(appDTO);
+            
+        }
+
+        public async Task<Result<List<GetApplicantDTO>>> GetApplicantsAsync(int pageNumber, int pageSize)
+        {
+            if (pageNumber <= 0)
+                return Result<List<GetApplicantDTO>>.Failure(["Page Number must be greater than 0."]);
+
+            if (pageSize <= 0)
+                return Result<List<GetApplicantDTO>>.Failure(["Page Size must be greater than 0."]);
+
+            var applicants = (await uOW.ApplicantRepository.PaginateAsync(pageSize, (pageNumber - 1) * pageSize)).ToList();
+
+            if (!applicants.Any())
+                return Result<List<GetApplicantDTO>>.Failure(["No Applicants Found."]);
+
+            var appsDTO = applicants.Select(a => new GetApplicantDTO
+            {
+                applicantId = a.ApplicantId,
+                Address = a.Address,
+                BirthDate = a.BirthDate,
+                CountryId = a.CountryId,
+                FullName = a.Fname + " " + a.Sname + " " + a.Tname + " " + a.Lname,
+                Gender = a.Gender,
+                NationalNo = a.NationalNo
+
+            }).ToList();
+
+            return Result<List<GetApplicantDTO>>.Success(appsDTO);
         }
     }
 }

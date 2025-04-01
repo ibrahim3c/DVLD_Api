@@ -6,5 +6,6 @@ namespace DVLD.Core.IRepositories
     public interface IApplicationRepository:IBaseRepository<Application>
     {
         Task<Result> ChangeStatusAsync(int id , string FromStatus ,string ToStatus);
+        Task<Result> ChangeStatusAsync(int id , string ToStatus);
     }
 }

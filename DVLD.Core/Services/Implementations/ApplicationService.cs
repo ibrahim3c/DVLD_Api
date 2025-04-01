@@ -221,6 +221,10 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result> DeleteApplicationAsync(int id)
         {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == id
+                 && a.AppStatus == AppStatuses.Completed))
+                return Result.Failure(["this Application is Completed"]);
+
             var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id);
             if (app == null)
                 return Result.Failure(["Application not Found"]);
@@ -230,6 +234,11 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO)
         {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == id&&
+                 a.AppStatus == AppStatuses.Completed))
+                return Result.Failure(["this Application is Completed"]);
+
+
             var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id);
             if (app == null)
                 return Result.Failure(["Application not Found"]);
@@ -249,10 +258,18 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result> ApproveTheApplicationAsync(int appId)
         {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                && a.AppStatus == AppStatuses.Completed))
+                return Result.Failure(["this Application is Completed"]);
+
             return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Approved);
         }
         public async Task<Result> RejectTheApplicationAsync(int appId)
         {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                 && a.AppStatus == AppStatuses.Completed))
+                return Result.Failure(["this Application is Completed"]);
+
             return await uow.ApplicationRepository.ChangeStatusAsync(appId, AppStatuses.Pending, AppStatuses.Rejected);
         }
 
@@ -274,7 +291,12 @@ namespace DVLD.Core.Services.Implementations
 
                 return Result<int>.Failure(["U already have a pending application for this license class."]);
 
-            //TODO:check if he already has license with same class
+            var driver = await uow.DriverRepository.FindAsync(l => l.applicantId == applicantId);
+            if (await uow.LicenseRepository.AnyAsync(l=>l.LicenseClassId==licenseClassId
+            && l.DriverId==driver.DriverId))
+            {
+                return Result<int>.Failure(["U already have a License from same license class."]);
+            }
 
             // Get the application fee
             var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
@@ -416,6 +438,7 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(application.AppID);
         }
+
 
         #endregion
 

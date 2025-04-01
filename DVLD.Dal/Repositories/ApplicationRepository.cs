@@ -28,5 +28,18 @@ namespace DVLD.Dal.Repositories
             return Result.Success();
         }
 
+        public async Task<Result> ChangeStatusAsync(int id, string ToStatus)
+        {
+            if (!AppStatuses.IsValidStatus(ToStatus))
+                return Result.Failure(["Invalid status"]);
+
+            var application = await _context.applications.SingleOrDefaultAsync(a => a.AppID == id);
+            if (application is null)
+                return Result.Failure(["No Application found"]);
+                application.AppStatus = ToStatus;
+
+            await _context.SaveChangesAsync();
+            return Result.Success();
+        }
     }
 }

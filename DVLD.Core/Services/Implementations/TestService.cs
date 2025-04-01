@@ -132,8 +132,13 @@ namespace DVLD.Core.Services.Implementations
         public async Task<Result<int>> ScheduleVisionTestAsync(int appId, int applicantId)
         {
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            && a.AppStatus==AppStatuses.Completed))
+                return Result<int>.Failure(["this Application is Completed"]);
+
+            // yaraaab
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
             && a.ApplicantId == applicantId
-            && a.AppStatus == AppStatuses.Pending))
+            && a.AppStatus == AppStatuses.Approved))
                 return Result<int>.Failure(["No Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
@@ -187,8 +192,12 @@ namespace DVLD.Core.Services.Implementations
         public async Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId)
         {
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                && a.AppStatus == AppStatuses.Completed))
+                return Result<int>.Failure(["this Application is Completed"]);
+
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                                                         && a.ApplicantId == applicantId
-                                                        && a.AppStatus == AppStatuses.Pending))
+                                                        && a.AppStatus == AppStatuses.Approved))
                 return Result<int>.Failure(["No Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
@@ -251,8 +260,12 @@ namespace DVLD.Core.Services.Implementations
         public async Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId)
         {
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                 && a.AppStatus == AppStatuses.Completed))
+                return Result<int>.Failure(["this Application is Completed"]);
+
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                                                         && a.ApplicantId == applicantId
-                                                        && a.AppStatus == AppStatuses.Pending))
+                                                        && a.AppStatus == AppStatuses.Approved))
                 return Result<int>.Failure(["No Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
@@ -350,7 +363,45 @@ namespace DVLD.Core.Services.Implementations
             await uow.TestRepository.AddAsync(test);
             uow.Complete();
             return Result.Success();
-        } 
+        }
+        public async Task<Result> IsAllTestPassed(int applicantId, int appId)
+        {
+            var testTypes = new[]
+            {
+            TestTypes.VisionTest,
+            TestTypes.WrittenTest,
+            TestTypes.PracticalTest
+            };
+
+            foreach (var testType in testTypes)
+            {
+                var result = await IsTestPassed(applicantId, appId, testType);
+                if (!result.IsSuccess)
+                    return result; // Return failure immediately if any test is not passed
+            }
+
+            return Result.Success();
+        }
+        public async Task<Result> IsTestPassed(int applicantId, int appId, TestTypes testType)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+                        && a.ApplicantId == applicantId
+                        && a.AppStatus == AppStatuses.Pending))
+                return Result.Failure(["No Application for this Applicant Found!"]);
+
+            var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
+                                                            && t.TestTypeId == (int)testType
+                                                            && t.IsLooked
+                                                            && t.Test != null
+                                                            && t.Test.TestResult, ["Test"]);
+
+            if (appointment == null)
+                return Result.Failure([$"You didn't pass the {testType}"]);
+
+            return Result.Success();
+        }
+
+
         #endregion
 
     }

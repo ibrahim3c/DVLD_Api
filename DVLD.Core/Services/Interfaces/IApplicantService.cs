@@ -6,9 +6,14 @@ namespace DVLD.Core.Services.Interfaces
 {
     public interface IApplicantService
     {
-        Task<Result<Applicant>> GetByIdAsync(int id);
-        Task<Result<Applicant>> GetByNationalNoAsync(string nationalNo);
-        Task<Result<List<Applicant>>> GetApplicantsAsync(int pageNumber, int pageSize);
+        Task<Result<Applicant>> GetDetailsByIdAsync(int id);
+        Task<Result<Applicant>> GetDetailsByNationalNoAsync(string nationalNo);
+        Task<Result<List<Applicant>>> GetDetailsApplicantsAsync(int pageNumber, int pageSize);
+
+        Task<Result<GetApplicantDTO>> GetByIdAsync(int id);
+        Task<Result<GetApplicantDTO>> GetByNationalNoAsync(string nationalNo);
+        Task<Result<List<GetApplicantDTO>>> GetApplicantsAsync(int pageNumber, int pageSize);
+
         Task<Result<string>> GetApplicantUserIdbyIdAsync(int id);
         Task<Result<string>> GetApplicantUserIdbyNationalNoAsync(string nationalNo);
         Task<Result<string>> GetFullNameAsync(int id);

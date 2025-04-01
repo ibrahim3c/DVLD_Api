@@ -1,0 +1,126 @@
+﻿using Core.DTOS;
+using DVLD.Core.DTOs;
+using DVLD.Core.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace DVLD.Api.Controllers
+{
+    [ApiController]
+    [Route("Api/[controller]")]
+    public class UsersController:ControllerBase
+    {
+        private readonly IUserService _userService;
+        public UsersController(IUserService userService)
+        {
+            _userService = userService;
+        }
+
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsersAsync()
+        {
+            var result = await _userService.GetAllUsersAsync();
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetUser/{userID}")]
+        public async Task<IActionResult> GetUserByIdAsync(string userID)
+        {
+            var result = await _userService.GetUserByIdAsync(userID);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetUserByEmail/{email}")]
+        public async Task<IActionResult> GetUserByEmailAsync(string email)
+        {
+            var result = await _userService.GetUserByEmailAsync(email);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetRolesOfUser/{userId}")]
+        public async Task<IActionResult> GetRolesOfUserAsync(string userId)
+        {
+            var result = await _userService.GetRolesOfUserAsync(userId);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetRolesNameOfUser/{userId}")]
+        public async Task<IActionResult> GetRolesNameOfUserAsync(string userId)
+        {
+            var result = await _userService.GetRolesNameOfUserAsync(userId);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("LockUnLock/{id}")]
+        public async Task<IActionResult> LockUnLock(string id)
+        {
+            var result = await _userService.LockUnLock(id);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("AddUser")]
+        public async Task<IActionResult> AddUserAsync([FromBody] CreatedUserDTO createdUserDTO)
+        {
+            var result = await _userService.AddUserAsync(createdUserDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPut("UpdateUser")]
+        public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDTO userDTO)
+        {
+            var result = await _userService.UpdateUserAsync(userDTO);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpDelete("DeleteUser/{userID}")]
+        public async Task<IActionResult> DeleteUserAsync(string userID)
+        {
+            var result = await _userService.DeleteUserAsync(userID);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpDelete("DeleteUserByEmail/{email}")]
+        public async Task<IActionResult> DeleteUserByEmailAsync(string email)
+        {
+            var result = await _userService.DeleteUserByEmailAsync(email);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetRolesForManaging/{userId}")]
+        public async Task<IActionResult> GetRolesForManagingAsync(string userId)
+        {
+            var result = await _userService.GetRolesForManagingAsync(userId);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("ManageUserRoles")]
+        public async Task<IActionResult> ManageUserRolesAsync([FromBody] ManageRolesDTO manageRolesDTO)
+        {
+            var result = await _userService.ManageUserRolesAsync(manageRolesDTO);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+    }
+}

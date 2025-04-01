@@ -19,7 +19,10 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId);
         Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId);
         Task<Result> EditTestAppointmentAsync(int testAppointmentId, EditTestAppointmentDTO editTestAppointmentDTO);
-        Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO); 
+        Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO);
+        Task<Result> IsAllTestPassed(int applicantId,int appId);
+        Task<Result> IsTestPassed(int applicantId, int appId, TestTypes testType);
+
         #endregion
     }
 }
