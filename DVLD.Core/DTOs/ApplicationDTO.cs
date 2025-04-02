@@ -4,6 +4,7 @@ namespace DVLD.Core.DTOs
 {
     public  class ApplicationDTO
     {
+        public int AppId {  get; set; }
         public string ApplicationType { get; set; } 
         public DateTime AppDate { get; set; } = DateTime.UtcNow;
         public string AppStatus { get; set; } = AppStatuses.Pending; 

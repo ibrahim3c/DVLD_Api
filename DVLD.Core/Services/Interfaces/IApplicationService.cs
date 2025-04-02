@@ -15,11 +15,18 @@ namespace DVLD.Core.Services.Interfaces
         // application
         Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationAsync();
-        Task<Result> DeleteApplicationAsync(int id);
-        Task<Result> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO);
         Task<Result<IEnumerable<ApplicationDTO>>>GetAllApplicationWithStatusAsync(string status);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByNationalNoAsync(string nationalNo);
         Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByIdAsync(int applicantId);
+
+        Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id, int appType);
+        Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationAsync(int appType);
+        Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationWithStatusAsync(string status, int appType);
+        Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByNationalNoAsync(string nationalNo, int appType);
+        Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByIdAsync(int applicantId, int appType);
+
+        Task<Result> DeleteApplicationAsync(int id);
+        Task<Result> UpdateApplicationAsync(int id, UpdateApplicationDTO updateApplicationDTO);
         Task<Result> ApproveTheApplicationAsync(int appId);
         Task<Result> RejectTheApplicationAsync(int appId);
 
@@ -32,6 +39,10 @@ namespace DVLD.Core.Services.Interfaces
 
         // retakeTestApp
         Task<Result<int>> ApplyForRetakeTestApp(int applicantId);
+
+        //NewInternationalLicenseApplication
+        Task<Result<int>> ApplyForNewInternationalLicenseApplicationAsync(int applicantId);
+
 
 
 

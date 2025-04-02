@@ -9,10 +9,12 @@ namespace DVLD.Core.Services.Implementations
     public class ApplicationService : IApplicationService
     {
         private readonly IUOW uow;
+        private readonly ILicenseService licenseService;
 
         public ApplicationService(IUOW uow)
         {
             this.uow = uow;
+            this.licenseService = licenseService;
         }
         #region ManageApplicationTypes
         public async Task<Result<int>> AddAppTypeAync(TypeDTO appTypeDTO)
@@ -129,6 +131,7 @@ namespace DVLD.Core.Services.Implementations
 
             var appDTO = new ApplicationDTO
             {
+                AppId=app.AppID,
                 AppDate = app.AppDate,
                 AppFee = app.AppFee,
                 AppStatus = app.AppStatus,
@@ -147,6 +150,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo, ["Applicant", "AppType", "LicenseClass"])
                 ).Select(app => new ApplicationDTO
                 {
+                    AppId = app.AppID,
                     AppDate = app.AppDate,
                     AppFee = app.AppFee,
                     AppStatus = app.AppStatus,
@@ -168,6 +172,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId, ["Applicant", "AppType", "LicenseClass"])
                 ).Select(app => new ApplicationDTO
                 {
+                    AppId = app.AppID,
                     AppDate = app.AppDate,
                     AppFee = app.AppFee,
                     AppStatus = app.AppStatus,
@@ -188,7 +193,8 @@ namespace DVLD.Core.Services.Implementations
 
             var apps = (await uow.ApplicationRepository.GetAllAsync(["Applicant", "AppType", "LicenseClass"])).Select(app=> new ApplicationDTO
             {
-                AppDate=app.AppDate,
+                AppId = app.AppID,
+                AppDate = app.AppDate,
                 AppFee=app.AppFee,
                 AppStatus = app.AppStatus,
                 ApplicationType = app.AppType.Title,
@@ -206,6 +212,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppStatus == status, ["Applicant", "AppType", "LicenseClass"])
                 ).Select(app => new ApplicationDTO
                 {
+                    AppId = app.AppID,
                     AppDate = app.AppDate,
                     AppFee = app.AppFee,
                     AppStatus = app.AppStatus,
@@ -219,6 +226,113 @@ namespace DVLD.Core.Services.Implementations
             return Result<IEnumerable<ApplicationDTO>>.Success(apps);
 
         }
+
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationAsync(int appType)
+        {
+            if (!await uow.ApplicationRepository.AnyAsync())
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Applications Found"]);
+
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a=>a.AppTypeID==appType,["Applicant", "AppType", "LicenseClass"])).Select(app => new ApplicationDTO
+            {
+                AppId = app.AppID,
+                AppDate = app.AppDate,
+                AppFee = app.AppFee,
+                AppStatus = app.AppStatus,
+                ApplicationType = app.AppType.Title,
+                LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                NationalNumber = app.Applicant.NationalNo,
+                ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+            });
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+        }
+        public async Task<Result<ApplicationDTO>> GetApplicationByIdAsync(int id,int appType)
+        {
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppID == id && a.AppTypeID==appType, ["Applicant", "AppType", "LicenseClass"]);
+            if (app == null)
+                return Result<ApplicationDTO>.Failure(["Application not Found"]);
+            var fullName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim();
+
+
+            var appDTO = new ApplicationDTO
+            {
+                AppId = app.AppID,
+                AppDate = app.AppDate,
+                AppFee = app.AppFee,
+                AppStatus = app.AppStatus,
+                ApplicantName = fullName,
+                ApplicationType = app.AppType.Title,
+                LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                NationalNumber = app.Applicant.NationalNo,
+            };
+            return Result<ApplicationDTO>.Success(appDTO);
+        }
+
+
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicationWithStatusAsync(string status, int appType)
+        {
+            status = status.Trim('"');
+            if (!AppStatuses.IsValidStatus(status))
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["Invalid status"]);
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppStatus == status && a.AppTypeID==appType, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new ApplicationDTO
+                {
+                    AppId = app.AppID,
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo
+                });
+            if (!apps.Any())
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+        }
+
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByNationalNoAsync(string nationalNo, int appType)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.NationalNo == nationalNo))
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Applicant with this National Number"]);
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID==appType, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new ApplicationDTO
+                {
+                    AppId = app.AppID,
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo
+                });
+
+            if (!apps.Any())
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+        }
+
+        public async Task<Result<IEnumerable<ApplicationDTO>>> GetAllApplicantApplicationsByIdAsync(int applicantId, int appType)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.ApplicantId == applicantId))
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Applicant with this National Number"]);
+            var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID==appType, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new ApplicationDTO
+                {
+                    AppId = app.AppID,
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo
+                });
+            if (!apps.Any())
+                return Result<IEnumerable<ApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<ApplicationDTO>>.Success(apps);
+        }
+
         public async Task<Result> DeleteApplicationAsync(int id)
         {
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == id
@@ -292,7 +406,8 @@ namespace DVLD.Core.Services.Implementations
                 return Result<int>.Failure(["U already have a pending application for this license class."]);
 
             var driver = await uow.DriverRepository.FindAsync(l => l.applicantId == applicantId);
-            if (await uow.LicenseRepository.AnyAsync(l=>l.LicenseClassId==licenseClassId
+
+            if (driver is not null && await uow.LicenseRepository.AnyAsync(l=>l.LicenseClassId==licenseClassId
             && l.DriverId==driver.DriverId))
             {
                 return Result<int>.Failure(["U already have a License from same license class."]);
@@ -305,7 +420,7 @@ namespace DVLD.Core.Services.Implementations
 
             var application = new Application
             {
-                AppDate = DateTime.Now,
+                AppDate = DateTime.UtcNow,
                 AppFee = appType.TypeFee,
                 ApplicantId = applicantId,
                 AppStatus = AppStatuses.Pending,
@@ -321,6 +436,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass","TestAppointments.Test"]))
                 .Select(x => new LocalAppLicenseDTO
                 {
+                    AppId=x.AppID,
                     AppDate = x.AppDate,
                     AppFee = x.AppFee,
                     ApplicantName = $"{x.Applicant.Fname ?? ""} {x.Applicant.Sname ?? ""} {x.Applicant.Tname ?? ""} {x.Applicant.Lname ?? ""}",
@@ -349,6 +465,7 @@ namespace DVLD.Core.Services.Implementations
 
             var appDTO = new LocalAppLicenseDTO
             {
+                AppId = app.AppID,
                 AppDate = app.AppDate,
                 AppFee = app.AppFee,
                 AppStatus = app.AppStatus,
@@ -369,6 +486,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID==(int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"])
                 ).Select(app => new LocalAppLicenseDTO
                 {
+                    AppId = app.AppID,
                     AppDate = app.AppDate,
                     AppFee = app.AppFee,
                     AppStatus = app.AppStatus,
@@ -393,6 +511,7 @@ namespace DVLD.Core.Services.Implementations
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"])
                 ).Select(app => new LocalAppLicenseDTO
                 {
+                    AppId = app.AppID,
                     AppDate = app.AppDate,
                     AppFee = app.AppFee,
                     AppStatus = app.AppStatus,
@@ -439,6 +558,59 @@ namespace DVLD.Core.Services.Implementations
             return Result<int>.Success(application.AppID);
         }
 
+        #endregion
+
+        #region InternationalLicenseApp
+        public async Task<Result<int>> ApplyForNewInternationalLicenseApplicationAsync(int applicantId)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(x => x.ApplicantId == applicantId))
+                return Result<int>.Failure(["this applicant is not found!"]);
+
+
+            if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.NewInternationalDrivingLicense
+                                                          && x.ApplicantId == applicantId
+                                                          && x.AppStatus == AppStatuses.Pending))
+                return Result<int>.Failure(["U already have a pending application."]);
+
+
+            var driver = await uow.DriverRepository.FindAsync(l => l.applicantId == applicantId, ["Applicant"]);
+            if(driver is null)
+                return Result<int>.Failure(["U must have a license from classThree-Ordinary."]);
+
+            if (await uow.LicenseRepository.AnyAsync(l => l.Application.AppTypeID == (int)AppTypes.NewInternationalDrivingLicense
+            && l.DriverId == driver.DriverId))
+            {
+                return Result<int>.Failure(["U already have an International License ."]);
+            }
+
+
+            var driverLicense = await uow.LicenseRepository.FindAsync(x => x.LicenseClassId == (int)LicenseClasses.ClassThree_Oridinary
+                                                       && x.DriverId == driver.DriverId);
+            if(driverLicense is null)
+                return Result<int>.Failure(["U must have a license from classThree-Ordinary."]);
+
+            var isValidLicense = await licenseService.ValidateLicenseAsync(driverLicense.LicenseId);
+            if (!isValidLicense.IsSuccess)
+                return Result<int>.Failure(["U must have a license from classThree-Ordinary."]);
+
+
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewInternationalDrivingLicense);
+            if (appType == null)
+                return Result<int>.Failure(["Application type not found!"]);
+
+            var application = new Application
+            {
+                AppDate = DateTime.UtcNow,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Pending,
+                AppTypeID = (int)AppTypes.NewInternationalDrivingLicense,
+            };
+            await uow.ApplicationRepository.AddAsync(application);
+            uow.Complete();
+            return Result<int>.Success(application.AppID);
+        }
 
         #endregion
 

@@ -10,6 +10,14 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicensesByDriverIdAsync(int driverId);
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicenseByLicenseIdAsync(int licenseId);
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicensesByNationalNoAsync(string nationalNo);
+        Task<Result> ValidateLicenseAsync(int LicenseId );
+
+        Task<Result<int>> IssueInternationalLicenseAsync(AddInternationalLicenseDTO addLicenseDTO);
+        Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByApplicantIdAsync(int applicantId);
+        Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByDriverIdAsync(int driverId);
+        Task<Result<GetInternationalLicenseDTO>>GetInternationalLicenseByLicenseIdAsync(int licenseId);
+        Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByNationalNoAsync(string nationalNo);
+
 
     }
 }

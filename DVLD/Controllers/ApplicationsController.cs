@@ -1,4 +1,5 @@
 ﻿using DVLD.Core.DTOs;
+using DVLD.Core.Helpers;
 using DVLD.Core.Services.Implementations;
 using DVLD.Core.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -196,6 +197,59 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+
+
+        #endregion
+
+        #region InternationalLicenseApp
+        [HttpPost("ApplyForNewInternationalLicenseApplication")]
+        public async Task<IActionResult> ApplyNewForInternationalLicenseApplication(int applicantId)
+        {
+            var result = await applicationService.ApplyForNewInternationalLicenseApplicationAsync(applicantId);
+            if (result.IsSuccess)
+                //return Ok(result);
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
+        [HttpGet("GetAllInternationalLicenseApps")]
+        public async Task<IActionResult> GetAllInternationalLicenseApps()
+        {
+            var result = await applicationService.GetAllApplicationAsync((int)AppTypes.NewInternationalDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetInternationalLicenseAppByIdAsync/{id}")]
+        public async Task<IActionResult> GetInternationalLicenseAppByIdAsync(int id)
+        {
+            var result = await applicationService.GetApplicationByIdAsync(id, (int)AppTypes.NewInternationalDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        [HttpGet("GetAllInternationalLicenseAppsWithsByNationalNoAsync")]
+        public async Task<IActionResult> GetAllInternationalLicenseAppsWithsByNationalNoAsync([FromQuery] string nationalNo)
+        {
+            var result = await applicationService.GetAllApplicantApplicationsByNationalNoAsync(nationalNo,(int)AppTypes.NewInternationalDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllInternationalLicenseAppByApplicantIdAsync/{applicantId}")]
+        public async Task<IActionResult> GetAllInternationalLicenseAppByApplicantIdAsync(int applicantId)
+        {
+            var result = await applicationService.GetAllApplicantApplicationsByIdAsync(applicantId,(int)AppTypes.NewInternationalDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
 
 
         #endregion

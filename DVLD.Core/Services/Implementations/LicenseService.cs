@@ -139,6 +139,7 @@ namespace DVLD.Core.Services.Implementations
             if (applicant == null)
                 return Result<int>.Failure(["No Applicant Found"]);
 
+
             var isAllTestsPassed =await testService.IsAllTestPassed(applicant.ApplicantId, addLicenseDTO.AppId);
           if (!isAllTestsPassed.IsSuccess)
                  return Result<int>.Failure(isAllTestsPassed.errors);
@@ -157,7 +158,6 @@ namespace DVLD.Core.Services.Implementations
                 if(!result.IsSuccess)
                     return Result<int>.Failure(result.Errors);
 
-
             var license = new License
             {
                 AppId = addLicenseDTO.AppId,
@@ -171,12 +171,168 @@ namespace DVLD.Core.Services.Implementations
             };
 
             await uow.LicenseRepository.AddAsync(license);
-            uow.Complete();
 
             await uow.ApplicationRepository.ChangeStatusAsync(addLicenseDTO.AppId, AppStatuses.Completed);
+            uow.Complete();
 
             return Result<int>.Success(license.LicenseId);
 
+        }
+
+        public async Task<Result> ValidateLicenseAsync(int licenseId)
+        {
+            var license = await uow.LicenseRepository.FindAsync(l=>l.LicenseId== licenseId, ["LicenseClass"]);
+            if (license == null)
+                return Result.Failure(["No License Found"]);
+
+            if (!license.IsValid)
+                return Result.Failure(["The License is not active"]);
+
+            // Calculate license expiry date
+            var expiryDate = license.IssueDate.AddYears(license.LicenseClass.ValidityPeriod);
+
+            // Check if license has expired
+            if (DateTime.UtcNow > expiryDate)
+                return Result.Failure(["The License has expired"]);
+
+            return Result.Success();
+        }
+
+        // InternationalLicense
+        public async Task<Result<int>> IssueInternationalLicenseAsync(AddInternationalLicenseDTO addLicenseDTO)
+        {
+            var application = await uow.ApplicationRepository.FindAsync(a => a.AppID == addLicenseDTO.AppId && a.AppStatus==AppStatuses.Approved, ["Applicant"]);
+            if (application == null)
+                return Result<int>.Failure(["No Approved Application Found"]);
+
+
+            var driver = await uow.DriverRepository.FindAsync(d => d.applicantId == application.ApplicantId);
+            if (driver != null)
+            {
+                return Result<int>.Failure(["No Driver found for this application"]);
+            }
+
+
+            var license = new License
+            {
+                AppId = addLicenseDTO.AppId,
+                IssueDate = DateTime.UtcNow,
+                DriverId = driver.DriverId,
+                IssueReason = IssueReasons.InternationalLicenseFirstTime,
+                IsValid = true,
+                Notes = addLicenseDTO.Notes,
+                PaidFees = addLicenseDTO.PaidFees //Todo CHECK FOR THIS 
+            };
+
+            await uow.LicenseRepository.AddAsync(license);
+            await uow.ApplicationRepository.ChangeStatusAsync(addLicenseDTO.AppId, AppStatuses.Completed);
+            uow.Complete();
+
+            return Result<int>.Success(license.LicenseId);
+        }
+
+        public async Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByApplicantIdAsync(int applicantId)
+        {
+            var result = (await driverServices.GetDriverByApplicantIdAsync(applicantId));
+            if (!result.IsSuccess)
+                return Result <GetInternationalLicenseDTO>.Failure(result.Errors);
+            var driverId = result.Value.DriverId;
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppTypeID == (int)AppTypes.NewInternationalDrivingLicense && a.ApplicantId == applicantId);
+            var license = await uow.LicenseRepository.FindAsync(l => l.DriverId == driverId && l.AppId==app.AppID,
+                             ["Driver.Applicant", "LicenseClass"]);
+            if (license==null)
+                return Result <GetInternationalLicenseDTO>.Failure(["No License Found!"]);
+
+
+            var licenseDTO =  new GetInternationalLicenseDTO
+            {
+                LicenseId = license.LicenseId,
+                IssueDate = license.IssueDate.ToString("d"),
+                ExpirationDate = license.IssueDate.AddYears(license.LicenseClass?.ValidityPeriod ?? 0).ToString("d"), // Default to 5 years if null
+                DriverName = $"{license.Driver?.Applicant?.Fname} {license.Driver?.Applicant?.Sname} {license.Driver?.Applicant?.Tname} {license.Driver?.Applicant?.Lname}".Trim(),
+                DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
+                Notes = license.Notes,
+                PaidFees = license.PaidFees,
+            };
+
+            return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
+        }
+
+        public async Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByDriverIdAsync(int driverId)
+        {
+            var driver = await uow.DriverRepository.FindAsync(d => d.DriverId == driverId);
+            if (driver is null)
+                return Result<GetInternationalLicenseDTO>.Failure(["No Driver Found"]);
+
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppTypeID == (int)AppTypes.NewInternationalDrivingLicense && a.ApplicantId == driver.applicantId);
+            var license = await uow.LicenseRepository.FindAsync(l => l.DriverId == driverId && l.AppId == app.AppID,
+                             ["Driver.Applicant", "LicenseClass"]);
+            if (license == null)
+                return Result<GetInternationalLicenseDTO>.Failure(["No License Found!"]);
+
+
+            var licenseDTO = new GetInternationalLicenseDTO
+            {
+                LicenseId = license.LicenseId,
+                IssueDate = license.IssueDate.ToString("d"),
+                ExpirationDate = license.IssueDate.AddYears(license.LicenseClass?.ValidityPeriod ?? 0).ToString("d"), // Default to 5 years if null
+                DriverName = $"{license.Driver?.Applicant?.Fname} {license.Driver?.Applicant?.Sname} {license.Driver?.Applicant?.Tname} {license.Driver?.Applicant?.Lname}".Trim(),
+                DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
+                Notes = license.Notes,
+                PaidFees = license.PaidFees,
+            };
+
+            return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
+        }
+
+        public async Task<Result<GetInternationalLicenseDTO>> GetInternationalLicenseByLicenseIdAsync(int licenseId)
+        {
+            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId,
+                             ["Driver.Applicant", "LicenseClass"]);
+
+            if (license == null && license.Application.AppTypeID==(int)AppTypes.NewInternationalDrivingLicense)
+                return Result<GetInternationalLicenseDTO>.Failure(["No License Found!"]);
+
+
+            var licenseDTO = new GetInternationalLicenseDTO
+            {
+                LicenseId = license.LicenseId,
+                IssueDate = license.IssueDate.ToString("d"),
+                ExpirationDate = license.IssueDate.AddYears(license.LicenseClass?.ValidityPeriod ?? 0).ToString("d"), // Default to 5 years if null
+                DriverName = $"{license.Driver?.Applicant?.Fname} {license.Driver?.Applicant?.Sname} {license.Driver?.Applicant?.Tname} {license.Driver?.Applicant?.Lname}".Trim(),
+                DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
+                Notes = license.Notes,
+                PaidFees = license.PaidFees,
+            };
+
+            return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
+        }
+
+        public async Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByNationalNoAsync(string nationalNo)
+        {
+            var result = (await driverServices.GetDriverByApplicantNationalNoAsync(nationalNo));
+            if (!result.IsSuccess)
+                return Result<GetInternationalLicenseDTO>.Failure(result.Errors);
+            var driverId = result.Value.DriverId;
+            var app = await uow.ApplicationRepository.FindAsync(a => a.AppTypeID == (int)AppTypes.NewInternationalDrivingLicense && a.ApplicantId ==result.Value.applicantId);
+            var license = await uow.LicenseRepository.FindAsync(l => l.DriverId == driverId && l.AppId == app.AppID,
+                             ["Driver.Applicant", "LicenseClass"]);
+            if (license == null)
+                return Result<GetInternationalLicenseDTO>.Failure(["No License Found!"]);
+
+
+            var licenseDTO = new GetInternationalLicenseDTO
+            {
+                LicenseId = license.LicenseId,
+                IssueDate = license.IssueDate.ToString("d"),
+                ExpirationDate = license.IssueDate.AddYears(license.LicenseClass?.ValidityPeriod ?? 0).ToString("d"), // Default to 5 years if null
+                DriverName = $"{license.Driver?.Applicant?.Fname} {license.Driver?.Applicant?.Sname} {license.Driver?.Applicant?.Tname} {license.Driver?.Applicant?.Lname}".Trim(),
+                DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
+                Notes = license.Notes,
+                PaidFees = license.PaidFees,
+            };
+
+            return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
         }
     }
 }

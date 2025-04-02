@@ -6,6 +6,8 @@
         public const string ReplacementLost = "Replacement for Lost";  // بدل فاقد
         public const string ReplacementDamaged = "Replacement for Damaged"; // بدل تالف
         public const string Renewal = "Renewal"; // تجديد
+        public const string InternationalLicenseFirstTime = "International License For FirstTime"; 
+
     }
 
 }

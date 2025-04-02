@@ -139,7 +139,7 @@ namespace DVLD.Core.Services.Implementations
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
             && a.ApplicantId == applicantId
             && a.AppStatus == AppStatuses.Approved))
-                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+                return Result<int>.Failure(["No Approved Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
             // - If an appointment exists but the test has not been taken → "You already have an active test appointment."
@@ -198,7 +198,7 @@ namespace DVLD.Core.Services.Implementations
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                                                         && a.ApplicantId == applicantId
                                                         && a.AppStatus == AppStatuses.Approved))
-                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+                return Result<int>.Failure(["No Approved Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
             // - If an appointment exists but the test has not been taken → "You already have an active test appointment."
@@ -266,7 +266,7 @@ namespace DVLD.Core.Services.Implementations
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                                                         && a.ApplicantId == applicantId
                                                         && a.AppStatus == AppStatuses.Approved))
-                return Result<int>.Failure(["No Application for this Applicant Found!"]);
+                return Result<int>.Failure(["No Approved Application for this Applicant Found!"]);
 
             // Check if the applicant already has a scheduled test of the same type:
             // - If an appointment exists but the test has not been taken → "You already have an active test appointment."

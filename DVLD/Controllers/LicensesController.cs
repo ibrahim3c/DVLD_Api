@@ -59,6 +59,53 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        // international License
+        [HttpPost("IssueInternationalLicesnse")]
+        public async Task<IActionResult> IssueInternationalLicesnse(AddInternationalLicenseDTO licenseDTO)
+        {
+            var result = await licenseService.IssueInternationalLicenseAsync(licenseDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+        [HttpGet("GetInternationalLicensesByApplicantId/{applicantId}")]
+        public async Task<IActionResult> GetInternationalLicensesByApplicantId(int applicantId)
+        {
+            var result = await licenseService.GetInternationalLicensesByApplicantIdAsync(applicantId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetInternationalLicensesByDriverId/{driverId}")]
+        public async Task<IActionResult> GetInternationalLicensesByDriverId(int driverId)
+        {
+            var result = await licenseService.GetInternationalLicensesByDriverIdAsync(driverId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetInternationalLicenseByLicenseId/{licenseId}")]
+        public async Task<IActionResult> GetInternationalLicenseByLicenseId(int licenseId)
+        {
+            var result = await licenseService.GetInternationalLicenseByLicenseIdAsync(licenseId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetInternationalLicensesByNationalNo")]
+        public async Task<IActionResult> GetInternationalLicensesByNationalNo([FromQuery] string nationalNo)
+        {
+            var result = await licenseService.GetInternationalLicensesByNationalNoAsync(nationalNo);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
 
     }
 }
