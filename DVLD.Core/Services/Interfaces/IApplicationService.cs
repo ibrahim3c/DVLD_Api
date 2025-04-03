@@ -43,11 +43,12 @@ namespace DVLD.Core.Services.Interfaces
         //NewInternationalLicenseApplication
         Task<Result<int>> ApplyForNewInternationalLicenseApplicationAsync(int applicantId);
 
-
-
-
-
-
+        //Renew License
+        Task<Result<int>> ApplyForRenewLicenseApplicationAsync(int licenseId);
+        Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id);
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync();
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo);
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId);
 
 
     }

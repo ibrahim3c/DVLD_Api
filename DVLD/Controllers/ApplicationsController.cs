@@ -1,9 +1,7 @@
 ﻿using DVLD.Core.DTOs;
 using DVLD.Core.Helpers;
-using DVLD.Core.Services.Implementations;
 using DVLD.Core.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
 
 namespace DVLD.Api.Controllers
 {
@@ -202,7 +200,7 @@ namespace DVLD.Api.Controllers
         #endregion
 
         #region InternationalLicenseApp
-        [HttpPost("ApplyForNewInternationalLicenseApplication")]
+        [HttpPost("ApplyForNewInternationalLicenseApplication/{applicantId}")]
         public async Task<IActionResult> ApplyNewForInternationalLicenseApplication(int applicantId)
         {
             var result = await applicationService.ApplyForNewInternationalLicenseApplicationAsync(applicantId);
@@ -245,6 +243,57 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> GetAllInternationalLicenseAppByApplicantIdAsync(int applicantId)
         {
             var result = await applicationService.GetAllApplicantApplicationsByIdAsync(applicantId,(int)AppTypes.NewInternationalDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        #endregion
+
+        #region RenewLicenseApp
+        [HttpPost("ApplyForRenewLicenseApplicantion/{licenseId}")]
+        public async Task<IActionResult> ApplyForRenewLicenseApplicantion(int licenseId)
+        {
+            var result = await applicationService.ApplyForRenewLicenseApplicationAsync(licenseId);
+            if (result.IsSuccess)
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllRenewLicenseApps")]
+        public async Task<IActionResult> GetAllRenewLicenseApps()
+        {
+            var result = await applicationService.GetAllApplicationAsync((int)AppTypes.RenewDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetRenewLicenseAppByIdAsync/{id}")]
+        public async Task<IActionResult> GetRenewLicenseAppByIdAsync(int id)
+        {
+            var result = await applicationService.GetApplicationByIdAsync(id, (int)AppTypes.RenewDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        [HttpGet("GetAllRenewLicenseAppsWithsByNationalNoAsync")]
+        public async Task<IActionResult> GetAllRenewLicenseAppsWithsByNationalNoAsync([FromQuery] string nationalNo)
+        {
+            var result = await applicationService.GetAllApplicantApplicationsByNationalNoAsync(nationalNo, (int)AppTypes.RenewDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllRenewLicenseAppByApplicantIdAsync/{applicantId}")]
+        public async Task<IActionResult> GetAllRenewLicenseAppByApplicantIdAsync(int applicantId)
+        {
+            var result = await applicationService.GetAllApplicantApplicationsByIdAsync(applicantId, (int)AppTypes.RenewDrivingLicense);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);

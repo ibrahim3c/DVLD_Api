@@ -11,7 +11,7 @@ namespace DVLD.Core.Services.Implementations
         private readonly IUOW uow;
         private readonly ILicenseService licenseService;
 
-        public ApplicationService(IUOW uow)
+        public ApplicationService(IUOW uow,ILicenseService licenseService)
         {
             this.uow = uow;
             this.licenseService = licenseService;
@@ -506,7 +506,7 @@ namespace DVLD.Core.Services.Implementations
         public async Task<Result<IEnumerable<LocalAppLicenseDTO>>> GetAllLocalAppLicensesByApplicantIdAsync(int applicantId)
         {
             if (!await uow.ApplicantRepository.AnyAsync(a => a.ApplicantId == applicantId))
-                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Applicant with this National Number"]);
+                return Result<IEnumerable<LocalAppLicenseDTO>>.Failure(["No Applicant Found"]);
 
             var apps = (await uow.ApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass", "TestAppointments.Test"])
                 ).Select(app => new LocalAppLicenseDTO
@@ -611,8 +611,134 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(application.AppID);
         }
-
         #endregion
 
+        #region RenewLicenseApplication
+        public async Task<Result<int>> ApplyForRenewLicenseApplicationAsync(int licenseId)
+        {
+            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId, ["Application.Applicant", "LicenseClass"]);
+            if (license is null)
+                return Result<int>.Failure(["License not Found!"]);
+
+            var isExpired = DateTime.Now > license.IssueDate.AddYears(license.LicenseClass.ValidityPeriod);
+            if (!isExpired)
+                return Result<int>.Failure(["The license is not expired!"]);
+
+            var applicantId = license.Application.ApplicantId;
+
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
+            if (appType == null)
+                return Result<int>.Failure(["Application type not found!"]);
+
+            var application = new RenewLicenseApplication
+            {
+                AppDate = DateTime.UtcNow,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Pending,
+                AppTypeID = (int)AppTypes.RenewDrivingLicense,
+                LicenseClassId = license.LicenseClassId,
+                ExpiredLicenseId = licenseId
+            };
+            await uow.RenewLicenseApplicationRepository.AddAsync(application);
+            uow.Complete();
+            return Result<int>.Success(application.AppID);
+        }
+
+        public async Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id)
+        {
+            var app = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == id, ["Applicant", "AppType", "LicenseClass"]);
+            if (app == null)
+                return Result<GetRenewLicenseApplicationDTO>.Failure(["Application not Found"]);
+            var fullName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim();
+
+
+            var appDTO = new GetRenewLicenseApplicationDTO
+            {
+                AppId = app.AppID,
+                AppDate = app.AppDate,
+                AppFee = app.AppFee,
+                AppStatus = app.AppStatus,
+                ApplicantName = fullName,
+                ApplicationType = app.AppType.Title,
+                LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                NationalNumber = app.Applicant.NationalNo,
+                ExpiredLiceneId = app.ExpiredLicenseId
+            };
+            return Result<GetRenewLicenseApplicationDTO>.Success(appDTO);
+        }
+
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync()
+        {
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass"]))
+                .Select(x => new GetRenewLicenseApplicationDTO
+                {
+                    AppId = x.AppID,
+                    AppDate = x.AppDate,
+                    AppFee = x.AppFee,
+                    ApplicantName = $"{x.Applicant.Fname ?? ""} {x.Applicant.Sname ?? ""} {x.Applicant.Tname ?? ""} {x.Applicant.Lname ?? ""}",
+                    ApplicationType = x.AppType.Title,
+                    AppStatus = x.AppStatus,
+                    LicenseClass = x.LicenseClass!.Name,
+                    NationalNumber = x.Applicant.NationalNo,
+                    ExpiredLiceneId = x.ExpiredLicenseId
+                });
+            if (!apps.Any())
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applications Found"]);
+            return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Success(apps);
+        }
+
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.NationalNo == nationalNo))
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applicant with this National Number"]);
+
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new GetRenewLicenseApplicationDTO
+                {
+                    AppId = app.AppID,
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo,
+                    ExpiredLiceneId =app.ExpiredLicenseId
+
+                });
+
+            if (!apps.Any())
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Success(apps);
+        }
+
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId)
+        {
+            if (!await uow.ApplicantRepository.AnyAsync(a => a.ApplicantId == applicantId))
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applicant Found"]);
+
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass"])
+                ).Select(app => new GetRenewLicenseApplicationDTO
+                {
+                    AppId = app.AppID,
+                    AppDate = app.AppDate,
+                    AppFee = app.AppFee,
+                    AppStatus = app.AppStatus,
+                    ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                    ApplicationType = app.AppType.Title,
+                    LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
+                    NationalNumber = app.Applicant.NationalNo,
+                    ExpiredLiceneId = app.ExpiredLicenseId
+
+                });
+
+            if (!apps.Any())
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Application Found"]);
+            return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Success(apps);
+        }
+
+        #endregion
     }
 }

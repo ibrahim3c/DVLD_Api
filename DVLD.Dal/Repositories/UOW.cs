@@ -19,6 +19,7 @@ public class UOW : IUOW
         TestRepository=new TestRepository(appDbContext);
         DriverRepository = new DriverRepository(appDbContext);
         LicenseRepository = new LicenseRepository(appDbContext);
+        RenewLicenseApplicationRepository = new RenewLicenseApplicationRepository(appDbContext);
     }
 
     public IApplicantRepository ApplicantRepository {  get; private set; }
@@ -30,7 +31,7 @@ public class UOW : IUOW
     public ITestRepository TestRepository { get; private set; }
     public IDriverRepository DriverRepository { get; private set; } 
     public ILicenseRepository LicenseRepository { get; private set; }
-
+    public IRenewLicenseApplicationRepository RenewLicenseApplicationRepository { get; private set; }
 
     public int Complete()
     {

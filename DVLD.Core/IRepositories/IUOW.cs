@@ -11,6 +11,7 @@
         ITestRepository TestRepository { get;}
         IDriverRepository DriverRepository { get;}
         ILicenseRepository LicenseRepository { get;}
+        IRenewLicenseApplicationRepository RenewLicenseApplicationRepository { get; }
         int Complete();
     }
 }

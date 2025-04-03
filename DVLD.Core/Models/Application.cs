@@ -2,7 +2,7 @@
 
 namespace DVLD.Core.Models
 {
-    public sealed class Application
+    public  class Application
     {
             public int AppID { get; set; }  // Primary Key
             public int AppTypeID { get; set; }  // Foreign Key - Application Type

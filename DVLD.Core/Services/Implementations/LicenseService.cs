@@ -334,5 +334,38 @@ namespace DVLD.Core.Services.Implementations
 
             return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
         }
+
+        // renewLicense
+        public async Task<Result<int>> RenewLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO)
+        {
+            var application = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == renewLicenseApplicationDTO.ApplicationId&& a.AppStatus == AppStatuses.Approved, ["ExpiredLicense"]);
+            if (application == null)
+                return Result<int>.Failure(["No Approved Application Found"]);
+
+            // in activate this license
+            var Exlicense = application.ExpiredLicense;
+            Exlicense.IsValid = false;
+
+            var license = new License
+            {
+                AppId = application.AppID,
+                IssueDate = DateTime.UtcNow,
+                DriverId = Exlicense.DriverId,
+                IssueReason = IssueReasons.Renewal,
+                LicenseClassId = Exlicense.LicenseClassId,
+                IsValid = true,
+                Notes = renewLicenseApplicationDTO.Notes,
+                PaidFees = renewLicenseApplicationDTO.PaidFees
+            };
+
+           
+            await uow.LicenseRepository.AddAsync(license);
+            await uow.ApplicationRepository.ChangeStatusAsync(application.AppID, AppStatuses.Completed);
+            uow.LicenseRepository.Update(Exlicense);
+            uow.Complete();
+
+            return Result<int>.Success(license.LicenseId);
+
+        }
     }
 }
