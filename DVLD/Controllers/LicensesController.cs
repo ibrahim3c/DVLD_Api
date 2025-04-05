@@ -104,7 +104,35 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        //renew license
+        [HttpPost("RenewLicense")]
+        public async Task<IActionResult> RenewLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
+        {
+            var result = await licenseService.RenewLicenseAsync(licenseDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
 
+
+        // replace For Damaged or Lost License
+        [HttpPost("ReplaceForDamagedLicense")]
+        public async Task<IActionResult> ReplaceForDamagedLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
+        {
+            var result = await licenseService.ReplaceForDamagedLicenseAsync(licenseDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("ReplaceForLostLicense")]
+        public async Task<IActionResult> ReplaceForLostLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
+        {
+            var result = await licenseService.ReplaceForLostLicenseAsync(licenseDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
 
 
     }

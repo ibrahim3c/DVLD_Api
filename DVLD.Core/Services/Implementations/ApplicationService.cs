@@ -3,18 +3,17 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace DVLD.Core.Services.Implementations
 {
     public class ApplicationService : IApplicationService
     {
         private readonly IUOW uow;
-        private readonly ILicenseService licenseService;
 
-        public ApplicationService(IUOW uow,ILicenseService licenseService)
+        public ApplicationService(IUOW uow)
         {
             this.uow = uow;
-            this.licenseService = licenseService;
         }
         #region ManageApplicationTypes
         public async Task<Result<int>> AddAppTypeAync(TypeDTO appTypeDTO)
@@ -547,7 +546,7 @@ namespace DVLD.Core.Services.Implementations
 
             var application = new Application
             {
-                AppDate = DateTime.Now,
+                AppDate = DateTime.UtcNow,
                 AppFee = appType.TypeFee,
                 ApplicantId = applicantId,
                 AppStatus = AppStatuses.Approved,
@@ -589,9 +588,8 @@ namespace DVLD.Core.Services.Implementations
             if(driverLicense is null)
                 return Result<int>.Failure(["U must have a license from classThree-Ordinary."]);
 
-            var isValidLicense = await licenseService.ValidateLicenseAsync(driverLicense.LicenseId);
-            if (!isValidLicense.IsSuccess)
-                return Result<int>.Failure(["U must have a license from classThree-Ordinary."]);
+            if (!driverLicense.IsValid)
+                return Result<int>.Failure(["U must have an acive license from classThree-Ordinary."]);
 
 
             // Get the application fee
@@ -616,18 +614,20 @@ namespace DVLD.Core.Services.Implementations
         #region RenewLicenseApplication
         public async Task<Result<int>> ApplyForRenewLicenseApplicationAsync(int licenseId)
         {
-            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId, ["Application.Applicant", "LicenseClass"]);
+            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId , ["Application.Applicant", "LicenseClass"]);
             if (license is null)
                 return Result<int>.Failure(["License not Found!"]);
+           
+            
 
-            var isExpired = DateTime.Now > license.IssueDate.AddYears(license.LicenseClass.ValidityPeriod);
+            var isExpired = DateTime.UtcNow > license.IssueDate.AddYears(license.LicenseClass.ValidityPeriod);
             if (!isExpired)
                 return Result<int>.Failure(["The license is not expired!"]);
 
             var applicantId = license.Application.ApplicantId;
 
             // Get the application fee
-            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.NewLocalDrivingLicense);
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.RenewDrivingLicense);
             if (appType == null)
                 return Result<int>.Failure(["Application type not found!"]);
 
@@ -646,9 +646,13 @@ namespace DVLD.Core.Services.Implementations
             return Result<int>.Success(application.AppID);
         }
 
-        public async Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id)
+        public async Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id,int appTypeId)
         {
-            var app = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == id, ["Applicant", "AppType", "LicenseClass"]);
+            var appType = await uow.appTypeRepository.GetByIdAsync(appTypeId);
+            if(appType == null)
+                return Result<GetRenewLicenseApplicationDTO>.Failure(["This Application Type is not valid"]);
+
+            var app = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == id && a.AppTypeID== appTypeId, ["Applicant", "AppType", "LicenseClass"]);
             if (app == null)
                 return Result<GetRenewLicenseApplicationDTO>.Failure(["Application not Found"]);
             var fullName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim();
@@ -664,14 +668,18 @@ namespace DVLD.Core.Services.Implementations
                 ApplicationType = app.AppType.Title,
                 LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                 NationalNumber = app.Applicant.NationalNo,
-                ExpiredLiceneId = app.ExpiredLicenseId
+                OldLicenseId = app.ExpiredLicenseId
             };
             return Result<GetRenewLicenseApplicationDTO>.Success(appDTO);
         }
 
-        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync()
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync(int appTypeId)
         {
-            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.AppID == 1, ["Applicant", "AppType", "LicenseClass"]))
+            var appType = await uow.appTypeRepository.GetByIdAsync(appTypeId);
+            if (appType == null)
+                return Result < IEnumerable < GetRenewLicenseApplicationDTO >>.Failure(["This Application Type is not valid"]);
+
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.AppID == 1 &&a.AppTypeID==appTypeId, ["Applicant", "AppType", "LicenseClass"]))
                 .Select(x => new GetRenewLicenseApplicationDTO
                 {
                     AppId = x.AppID,
@@ -682,19 +690,23 @@ namespace DVLD.Core.Services.Implementations
                     AppStatus = x.AppStatus,
                     LicenseClass = x.LicenseClass!.Name,
                     NationalNumber = x.Applicant.NationalNo,
-                    ExpiredLiceneId = x.ExpiredLicenseId
+                    OldLicenseId = x.ExpiredLicenseId
                 });
             if (!apps.Any())
                 return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applications Found"]);
             return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Success(apps);
         }
 
-        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo)
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo,int appTypeId)
         {
+            var appType = await uow.appTypeRepository.GetByIdAsync(appTypeId);
+            if (appType == null)
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["This Application Type is not valid"]);
+
             if (!await uow.ApplicantRepository.AnyAsync(a => a.NationalNo == nationalNo))
                 return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applicant with this National Number"]);
 
-            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass"])
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.NationalNo == nationalNo && a.AppTypeID == appTypeId, ["Applicant", "AppType", "LicenseClass"])
                 ).Select(app => new GetRenewLicenseApplicationDTO
                 {
                     AppId = app.AppID,
@@ -705,8 +717,7 @@ namespace DVLD.Core.Services.Implementations
                     ApplicationType = app.AppType.Title,
                     LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                     NationalNumber = app.Applicant.NationalNo,
-                    ExpiredLiceneId =app.ExpiredLicenseId
-
+                    OldLicenseId =app.ExpiredLicenseId
                 });
 
             if (!apps.Any())
@@ -714,12 +725,16 @@ namespace DVLD.Core.Services.Implementations
             return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Success(apps);
         }
 
-        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId)
+        public async Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId,int appTypeId)
         {
+            var appType = await uow.appTypeRepository.GetByIdAsync(appTypeId);
+            if (appType == null)
+                return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["This Application Type is not valid"]);
+
             if (!await uow.ApplicantRepository.AnyAsync(a => a.ApplicantId == applicantId))
                 return Result<IEnumerable<GetRenewLicenseApplicationDTO>>.Failure(["No Applicant Found"]);
 
-            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID == (int)AppTypes.NewLocalDrivingLicense, ["Applicant", "AppType", "LicenseClass"])
+            var apps = (await uow.RenewLicenseApplicationRepository.FindAllAsync(a => a.Applicant.ApplicantId == applicantId && a.AppTypeID ==appTypeId, ["Applicant", "AppType", "LicenseClass"])
                 ).Select(app => new GetRenewLicenseApplicationDTO
                 {
                     AppId = app.AppID,
@@ -730,8 +745,7 @@ namespace DVLD.Core.Services.Implementations
                     ApplicationType = app.AppType.Title,
                     LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                     NationalNumber = app.Applicant.NationalNo,
-                    ExpiredLiceneId = app.ExpiredLicenseId
-
+                    OldLicenseId = app.ExpiredLicenseId
                 });
 
             if (!apps.Any())
@@ -740,5 +754,61 @@ namespace DVLD.Core.Services.Implementations
         }
 
         #endregion
+
+        public async Task<Result<int>> ApplyForReplacementDamagedLicenseApplicationAsync(int licenseId)
+        {
+            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId && l.IsValid, ["Application.Applicant", "LicenseClass"]);
+            if (license is null)
+                return Result<int>.Failure(["No Active License Found!"]);
+
+            var applicantId = license.Application.ApplicantId;
+
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.ReplacementForDamagedDrivingLicense);
+            if (appType == null)
+                return Result<int>.Failure(["Application type not found!"]);
+
+            var application = new RenewLicenseApplication
+            {
+                AppDate = DateTime.UtcNow,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Pending,
+                AppTypeID = appType.Id,
+                LicenseClassId = license.LicenseClassId,
+                ExpiredLicenseId = licenseId
+            };
+            await uow.RenewLicenseApplicationRepository.AddAsync(application);
+            uow.Complete();
+            return Result<int>.Success(application.AppID);
+        }
+        public async Task<Result<int>> ApplyForReplacementLostLicenseApplicationAsync(int licenseId)
+        {
+            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId && l.IsValid, ["Application.Applicant", "LicenseClass"]);
+            if (license is null)
+                return Result<int>.Failure(["No Active License Found!"]);
+
+            var applicantId = license.Application.ApplicantId;
+
+            // Get the application fee
+            var appType = await uow.appTypeRepository.GetByIdAsync((int)AppTypes.ReplacementForLostDrivingLicense);
+            if (appType == null)
+                return Result<int>.Failure(["Application type not found!"]);
+
+            var application = new RenewLicenseApplication
+            {
+                AppDate = DateTime.UtcNow,
+                AppFee = appType.TypeFee,
+                ApplicantId = applicantId,
+                AppStatus = AppStatuses.Pending,
+                AppTypeID = appType.Id,
+                LicenseClassId = license.LicenseClassId,
+                ExpiredLicenseId = licenseId
+            };
+            await uow.RenewLicenseApplicationRepository.AddAsync(application);
+            uow.Complete();
+            return Result<int>.Success(application.AppID);
+        }
+
     }
 }

@@ -177,7 +177,7 @@ namespace DVLD.Core.Services.Implementations
                 issuer: JWTConfigs.CurrentValue.Issuer,
                 audience: JWTConfigs.CurrentValue.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(JWTConfigs.CurrentValue.ExpireAfterInMinute),
+                expires: DateTime.UtcNow.AddMinutes(JWTConfigs.CurrentValue.ExpireAfterInMinute),
                 signingCredentials: signingCredentials);
 
             return jwtSecurityToken;

@@ -12,6 +12,7 @@
         IDriverRepository DriverRepository { get;}
         ILicenseRepository LicenseRepository { get;}
         IRenewLicenseApplicationRepository RenewLicenseApplicationRepository { get; }
+        IDetainedLicenseRepository DetainedLicenseRepository { get; }
         int Complete();
     }
 }

@@ -2,6 +2,6 @@
 {
     public class GetRenewLicenseApplicationDTO: ApplicationDTO
     {
-        public int ExpiredLiceneId {  get; set; }
+        public int OldLicenseId {  get; set; }
     }
 }

@@ -176,7 +176,7 @@ namespace DVLD.Core.Services.Implementations
                     ApplicationId = appId,
                     IsLooked = false,
                     // i make the default is week after he Schedule
-                    AppointmentDate = DateTime.Now.AddDays(7),
+                    AppointmentDate = DateTime.UtcNow.AddDays(7),
                     PaidFee = (await uow.testTypeRepository.GetByIdAsync(1)).TypeFee,
                     TestTypeId = (int)TestTypes.VisionTest,
                     RetakeTestAppId = retakeAppId
@@ -246,7 +246,7 @@ namespace DVLD.Core.Services.Implementations
                 ApplicationId = appId,
                 IsLooked = false,
                 // i make the default is week after he Schedule
-                AppointmentDate = DateTime.Now.AddDays(7),
+                AppointmentDate = DateTime.UtcNow.AddDays(7),
                 PaidFee = testType.TypeFee,
                 TestTypeId = (int)TestTypes.WrittenTest,
                 RetakeTestAppId = retakeAppId

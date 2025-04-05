@@ -45,11 +45,14 @@ namespace DVLD.Core.Services.Interfaces
 
         //Renew License
         Task<Result<int>> ApplyForRenewLicenseApplicationAsync(int licenseId);
-        Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id);
-        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync();
-        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo);
-        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId);
+        Task<Result<GetRenewLicenseApplicationDTO>> GetRewLicenseAppLicenseByIdAsync(int id,int appTypeId);
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppLicensesAsync(int appTypeId);
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsWithsByNationalNoAsync(string nationalNo, int appTypeId);
+        Task<Result<IEnumerable<GetRenewLicenseApplicationDTO>>> GetAllRewLicenseAppsByApplicantIdAsync(int applicantId, int appTypeId);
 
+        // damaged and lost license
+        Task<Result<int>> ApplyForReplacementDamagedLicenseApplicationAsync(int licenseId);
+        Task<Result<int>> ApplyForReplacementLostLicenseApplicationAsync(int licenseId);
 
     }
 }

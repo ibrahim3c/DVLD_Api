@@ -20,6 +20,7 @@ public class UOW : IUOW
         DriverRepository = new DriverRepository(appDbContext);
         LicenseRepository = new LicenseRepository(appDbContext);
         RenewLicenseApplicationRepository = new RenewLicenseApplicationRepository(appDbContext);
+        DetainedLicenseRepository=new DetainedLicenseRepository(appDbContext);
     }
 
     public IApplicantRepository ApplicantRepository {  get; private set; }
@@ -32,6 +33,7 @@ public class UOW : IUOW
     public IDriverRepository DriverRepository { get; private set; } 
     public ILicenseRepository LicenseRepository { get; private set; }
     public IRenewLicenseApplicationRepository RenewLicenseApplicationRepository { get; private set; }
+    public IDetainedLicenseRepository DetainedLicenseRepository { get; private set; }
 
     public int Complete()
     {

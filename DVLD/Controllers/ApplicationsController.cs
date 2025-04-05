@@ -263,7 +263,7 @@ namespace DVLD.Api.Controllers
         [HttpGet("GetAllRenewLicenseApps")]
         public async Task<IActionResult> GetAllRenewLicenseApps()
         {
-            var result = await applicationService.GetAllApplicationAsync((int)AppTypes.RenewDrivingLicense);
+            var result = await applicationService.GetAllRewLicenseAppLicensesAsync((int)AppTypes.RenewDrivingLicense);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -273,7 +273,7 @@ namespace DVLD.Api.Controllers
         [HttpGet("GetRenewLicenseAppByIdAsync/{id}")]
         public async Task<IActionResult> GetRenewLicenseAppByIdAsync(int id)
         {
-            var result = await applicationService.GetApplicationByIdAsync(id, (int)AppTypes.RenewDrivingLicense);
+            var result = await applicationService.GetRewLicenseAppLicenseByIdAsync(id,(int)AppTypes.RenewDrivingLicense);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -284,7 +284,7 @@ namespace DVLD.Api.Controllers
         [HttpGet("GetAllRenewLicenseAppsWithsByNationalNoAsync")]
         public async Task<IActionResult> GetAllRenewLicenseAppsWithsByNationalNoAsync([FromQuery] string nationalNo)
         {
-            var result = await applicationService.GetAllApplicantApplicationsByNationalNoAsync(nationalNo, (int)AppTypes.RenewDrivingLicense);
+            var result = await applicationService.GetAllRewLicenseAppsWithsByNationalNoAsync(nationalNo, (int)AppTypes.RenewDrivingLicense);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -293,7 +293,7 @@ namespace DVLD.Api.Controllers
         [HttpGet("GetAllRenewLicenseAppByApplicantIdAsync/{applicantId}")]
         public async Task<IActionResult> GetAllRenewLicenseAppByApplicantIdAsync(int applicantId)
         {
-            var result = await applicationService.GetAllApplicantApplicationsByIdAsync(applicantId, (int)AppTypes.RenewDrivingLicense);
+            var result = await applicationService.GetAllRewLicenseAppsByApplicantIdAsync(applicantId, (int)AppTypes.RenewDrivingLicense);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -304,6 +304,106 @@ namespace DVLD.Api.Controllers
         #endregion
 
 
+        #region ReplaceDamagedOrLostLicenseApp
+
+        [HttpPost("ApplyForReplacementDamagedLicenseApplicationAsync/{licenseId}")]
+        public async Task<IActionResult> ApplyForReplacementDamagedLicenseApplicationAsync(int licenseId)
+        {
+            var result = await applicationService.ApplyForReplacementDamagedLicenseApplicationAsync(licenseId);
+            if (result.IsSuccess)
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
+        [HttpPost("ApplyForReplacementLostLicenseApplicationAsync/{licenseId}")]
+        public async Task<IActionResult> ApplyForReplacementLostLicenseApplicationAsync(int licenseId)
+        {
+            var result = await applicationService.ApplyForReplacementLostLicenseApplicationAsync(licenseId);
+            if (result.IsSuccess)
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
+        [HttpGet("GetAllReplaceForDamagedLicenseApps")]
+        public async Task<IActionResult> GetAllReplaceForDamagedLicenseApps()
+        {
+            var result = await applicationService.GetAllRewLicenseAppLicensesAsync((int)AppTypes.ReplacementForDamagedDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetReplaceForDamagedLicenseAppByIdAsync/{id}")]
+        public async Task<IActionResult> GetReplaceForDamagedLicenseAppByIdAsync(int id)
+        {
+            var result = await applicationService.GetRewLicenseAppLicenseByIdAsync(id, (int)AppTypes.ReplacementForDamagedDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        [HttpGet("GetAllReplaceForDamagedLicenseAppsWithsByNationalNoAsync")]
+        public async Task<IActionResult> GetAllReplaceForDamagedLicenseAppsWithsByNationalNoAsync([FromQuery] string nationalNo)
+        {
+            var result = await applicationService.GetAllRewLicenseAppsWithsByNationalNoAsync(nationalNo, (int)AppTypes.ReplacementForDamagedDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllReplaceForDamagedLicenseAppByApplicantIdAsync/{applicantId}")]
+        public async Task<IActionResult> GetAllReplaceForDamagedLicenseAppByApplicantIdAsync(int applicantId)
+        {
+            var result = await applicationService.GetAllRewLicenseAppsByApplicantIdAsync(applicantId, (int)AppTypes.ReplacementForDamagedDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetAllReplaceForLostLicenseApps")]
+        public async Task<IActionResult> GetAllReplaceForLostLicenseApps()
+        {
+            var result = await applicationService.GetAllRewLicenseAppLicensesAsync((int)AppTypes.ReplacementForLostDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpGet("GetReplaceForLostLicenseAppByIdAsync/{id}")]
+        public async Task<IActionResult> GetReplaceForLostLicenseAppByIdAsync(int id)
+        {
+            var result = await applicationService.GetRewLicenseAppLicenseByIdAsync(id, (int)AppTypes.ReplacementForLostDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        [HttpGet("GetAllReplaceForLostLicenseAppsWithsByNationalNoAsync")]
+        public async Task<IActionResult> GetAllReplaceForLostLicenseAppsWithsByNationalNoAsync([FromQuery] string nationalNo)
+        {
+            var result = await applicationService.GetAllRewLicenseAppsWithsByNationalNoAsync(nationalNo, (int)AppTypes.ReplacementForLostDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllReplaceForLostLicenseAppByApplicantIdAsync/{applicantId}")]
+        public async Task<IActionResult> GetAllReplaceForLostLicenseAppByApplicantIdAsync(int applicantId)
+        {
+            var result = await applicationService.GetAllRewLicenseAppsByApplicantIdAsync(applicantId, (int)AppTypes.ReplacementForLostDrivingLicense);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+        #endregion
 
     }
 }

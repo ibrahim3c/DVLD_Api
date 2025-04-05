@@ -7,7 +7,7 @@ namespace DVLD.Core.Helpers
         {
             if (value is DateTime birthDate)
             {
-                if (birthDate > DateTime.Now.AddYears(-18))
+                if (birthDate > DateTime.UtcNow.AddYears(-18))
                 {
                     return new ValidationResult("You must be at least 18 years old.");
                 }

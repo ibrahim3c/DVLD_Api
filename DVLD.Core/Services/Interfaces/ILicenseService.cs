@@ -19,6 +19,9 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByNationalNoAsync(string nationalNo);
 
         Task<Result<int>> RenewLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO);
+        Task<Result<int>> ReplaceForDamagedLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO);
+        Task<Result<int>> ReplaceForLostLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO);
+        Task<Result<int>> DetainLicenseAsync(DetainedLicenseDTO detainedLicenseDTO);
 
 
 
