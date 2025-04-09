@@ -10,7 +10,7 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicensesByDriverIdAsync(int driverId);
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicenseByLicenseIdAsync(int licenseId);
         Task<Result<IEnumerable<GetLicenseDTO>>> GetLicensesByNationalNoAsync(string nationalNo);
-        Task<Result> ValidateLicenseAsync(int LicenseId );
+        Task<Result<IEnumerable<GetLicenseDTO>>> GetAllLicensesAsync();
 
         Task<Result<int>> IssueInternationalLicenseAsync(AddInternationalLicenseDTO addLicenseDTO);
         Task<Result<GetInternationalLicenseDTO>> GetInternationalLicensesByApplicantIdAsync(int applicantId);
@@ -22,6 +22,12 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<int>> ReplaceForDamagedLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO);
         Task<Result<int>> ReplaceForLostLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO);
         Task<Result<int>> DetainLicenseAsync(DetainedLicenseDTO detainedLicenseDTO);
+        Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesAsync();
+        Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByNationalNoAsync(string nationalNo);
+        Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByApplicantIdAsync(int applicantId);
+        Task<Result<int>> ReleaseLicenseAsync(int  applicantionId);
+
+
 
 
 

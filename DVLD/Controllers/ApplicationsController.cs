@@ -401,7 +401,16 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("ApplyForReleaseLicenseApplication/{licenseId}")]
+        public async Task<IActionResult> ApplyForReleaseLicenseApplicationAsync(int licenseId)
+        {
+            var result = await applicationService.ApplyForReleaseLicenseApplicationAsync(licenseId);
+            if (result.IsSuccess)
+                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+            return BadRequest(result);
+        }
 
+        
 
         #endregion
 

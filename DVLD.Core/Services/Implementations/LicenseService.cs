@@ -4,7 +4,6 @@ using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
 using FluentValidation;
-using System.Security.Cryptography.X509Certificates;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -14,15 +13,49 @@ namespace DVLD.Core.Services.Implementations
         private readonly IDriverServices driverServices;
         private readonly ITestService testService;
         private readonly IValidator<DetainedLicenseDTO> detainedLicenseDTOvalidator;
+        private readonly IValidator<AddLicenseDTO> addLicenseDTOValidator;
+        private readonly IValidator<AddInternationalLicenseDTO> addInternationalLicenseDTOValidator;
+        private readonly IValidator<RenewLicenseApplicationDTO> renewLicenseApplicationDTOValidator;
 
-        public LicenseService(IUOW uOW,IDriverServices driverServices,ITestService testService, IValidator<DetainedLicenseDTO >validator)
+        public LicenseService(IUOW uOW,IDriverServices driverServices
+            ,ITestService testService
+            , IValidator<DetainedLicenseDTO >validator
+            ,IValidator<AddLicenseDTO>addLicenseDTOValidator
+            ,IValidator<AddInternationalLicenseDTO> addInternationalLicenseDTOValidator
+            ,IValidator<RenewLicenseApplicationDTO> renewLicenseApplicationDTOValidator)
         {
             uow = uOW;
             this.driverServices = driverServices;
             this.testService = testService;
             this.detainedLicenseDTOvalidator = validator;
+            this.addLicenseDTOValidator = addLicenseDTOValidator;
+            this.addInternationalLicenseDTOValidator = addInternationalLicenseDTOValidator;
+            this.renewLicenseApplicationDTOValidator = renewLicenseApplicationDTOValidator;
         }
+        public async Task<Result<IEnumerable<GetLicenseDTO>>> GetAllLicensesAsync()
+        {
 
+            var licenses = await uow.LicenseRepository.GetAllAsync(["Driver.Applicant", "LicenseClass"]);
+            if (!licenses.Any())
+                return Result<IEnumerable<GetLicenseDTO>>.Failure(["No Licenses Found!"]);
+
+            var licensesDTO = licenses.Select(license => new GetLicenseDTO
+            {
+                LicenseId = license.LicenseId,
+                IssueDate = license.IssueDate.ToString("d"),
+                ExpirationDate = license.IssueDate.AddYears(license.LicenseClass?.ValidityPeriod ?? 0).ToString("d"), // Default to 5 years if null
+                LicenseClass = license.LicenseClass?.Name ?? "Unknown",
+                DriverName = $"{license.Driver?.Applicant?.Fname} {license.Driver?.Applicant?.Sname} {license.Driver?.Applicant?.Tname} {license.Driver?.Applicant?.Lname}".Trim(),
+                DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
+                IssueReason = license.IssueReason,
+                IsValid = license.IsValid,
+                Notes = license.Notes,
+                PaidFees = license.PaidFees,
+                IsDetained = license.IsDetained
+            }).ToList();
+
+            return Result<IEnumerable<GetLicenseDTO>>.Success(licensesDTO);
+        }
         public async Task<Result<IEnumerable<GetLicenseDTO>>> GetLicensesByApplicantIdAsync(int applicantId)
         {
             var result = (await driverServices.GetDriverByApplicantIdAsync(applicantId));
@@ -47,7 +80,7 @@ namespace DVLD.Core.Services.Implementations
                 IsValid = license.IsValid,
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
-                IsDetained = false // TODO: Add logic if necessary
+                IsDetained = license.IsDetained
             }).ToList();
 
             return Result<IEnumerable<GetLicenseDTO>>.Success(licensesDTO);
@@ -73,7 +106,7 @@ namespace DVLD.Core.Services.Implementations
                 IsValid = license.IsValid,
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
-                IsDetained = false // TODO: Add logic if necessary
+                IsDetained = license.IsDetained
             }).ToList();
 
             return Result<IEnumerable<GetLicenseDTO>>.Success(licensesDTO);
@@ -99,7 +132,7 @@ namespace DVLD.Core.Services.Implementations
                 IsValid = license.IsValid,
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
-                IsDetained = false // TODO: Add logic if necessary
+                IsDetained = license.IsDetained
             }).ToList();
 
             return Result<IEnumerable<GetLicenseDTO>>.Success(licensesDTO);
@@ -129,7 +162,7 @@ namespace DVLD.Core.Services.Implementations
                 IsValid = license.IsValid,
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
-                IsDetained = false // TODO: Add logic if necessary
+                IsDetained = license.IsDetained
             }).ToList();
 
             return Result<IEnumerable<GetLicenseDTO>>.Success(licensesDTO);
@@ -138,6 +171,12 @@ namespace DVLD.Core.Services.Implementations
 
         public async Task<Result<int>> IssueLicenseFirstTimeAsync(AddLicenseDTO addLicenseDTO)
         {
+            var validationResult = addLicenseDTOValidator.Validate(addLicenseDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return Result<int>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+            }
 
             var applicant = await uow.ApplicantRepository.FindAsync(a => a.NationalNo == addLicenseDTO.NationalNo);
             if (applicant == null)
@@ -187,28 +226,13 @@ namespace DVLD.Core.Services.Implementations
 
         }
 
-        public async Task<Result> ValidateLicenseAsync(int licenseId)
-        {
-            var license = await uow.LicenseRepository.FindAsync(l=>l.LicenseId== licenseId, ["LicenseClass"]);
-            if (license == null)
-                return Result.Failure(["No License Found"]);
-
-            if (!license.IsValid)
-                return Result.Failure(["The License is not active"]);
-
-            // Calculate license expiry date
-            var expiryDate = license.IssueDate.AddYears(license.LicenseClass.ValidityPeriod);
-
-            // Check if license has expired
-            if (DateTime.UtcNow > expiryDate)
-                return Result.Failure(["The License has expired"]);
-
-            return Result.Success();
-        }
-
         // InternationalLicense
         public async Task<Result<int>> IssueInternationalLicenseAsync(AddInternationalLicenseDTO addLicenseDTO)
         {
+            var validationResult=addInternationalLicenseDTOValidator.Validate(addLicenseDTO);
+            if (!validationResult.IsValid)
+                return Result<int>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+
             var application = await uow.ApplicationRepository.FindAsync(a => a.AppID == addLicenseDTO.AppId && a.AppStatus==AppStatuses.Approved, ["Applicant"]);
             if (application == null)
                 return Result<int>.Failure(["No Approved Application Found"]);
@@ -262,6 +286,7 @@ namespace DVLD.Core.Services.Implementations
                 DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
+                DriverId=driverId
             };
 
             return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
@@ -289,6 +314,8 @@ namespace DVLD.Core.Services.Implementations
                 DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
+                DriverId = driverId
+
             };
 
             return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
@@ -303,6 +330,7 @@ namespace DVLD.Core.Services.Implementations
                 return Result<GetInternationalLicenseDTO>.Failure(["No License Found!"]);
 
 
+
             var licenseDTO = new GetInternationalLicenseDTO
             {
                 LicenseId = license.LicenseId,
@@ -312,6 +340,7 @@ namespace DVLD.Core.Services.Implementations
                 DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
+                DriverId = license.DriverId
             };
 
             return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
@@ -339,6 +368,7 @@ namespace DVLD.Core.Services.Implementations
                 DriverDateOfBirth = license.Driver?.Applicant?.BirthDate.ToString("d"),
                 Notes = license.Notes,
                 PaidFees = license.PaidFees,
+                DriverId=driverId
             };
 
             return Result<GetInternationalLicenseDTO>.Success(licenseDTO);
@@ -347,6 +377,13 @@ namespace DVLD.Core.Services.Implementations
         // renewLicense
         public async Task<Result<int>> RenewLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO)
         {
+            var validationResult = renewLicenseApplicationDTOValidator.Validate(renewLicenseApplicationDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return Result<int>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+            }
+
             var application = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == renewLicenseApplicationDTO.ApplicationId&& a.AppStatus == AppStatuses.Approved, ["ExpiredLicense"]);
             if (application == null)
                 return Result<int>.Failure(["No Approved Application Found"]);
@@ -383,6 +420,13 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result<int>> ReplaceForDamagedLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO)
         {
+            var validationResult = renewLicenseApplicationDTOValidator.Validate(renewLicenseApplicationDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return Result<int>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+            }
+
             var application = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == renewLicenseApplicationDTO.ApplicationId && a.AppStatus == AppStatuses.Approved 
             &&a.AppTypeID==(int)AppTypes.ReplacementForDamagedDrivingLicense, ["ExpiredLicense"]);
             if (application == null)
@@ -421,6 +465,13 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result<int>> ReplaceForLostLicenseAsync(RenewLicenseApplicationDTO renewLicenseApplicationDTO)
         {
+            var validationResult = renewLicenseApplicationDTOValidator.Validate(renewLicenseApplicationDTO);
+
+            if (!validationResult.IsValid)
+            {
+                return Result<int>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+            }
+
             var application = await uow.RenewLicenseApplicationRepository.FindAsync(a => a.AppID == renewLicenseApplicationDTO.ApplicationId && a.AppStatus == AppStatuses.Approved
                        && a.AppTypeID == (int)AppTypes.ReplacementForLostDrivingLicense, ["ExpiredLicense"]);
             if (application == null)
@@ -491,5 +542,115 @@ namespace DVLD.Core.Services.Implementations
 
             return Result<int>.Success(detainedLicense.DetainedLicenseId);
         }
-    }
+        public async Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesAsync()
+        {
+            var licenses = await uow.DetainedLicenseRepository.GetAllAsync(["License.Driver.Applicant", "ReleaseApplication"]);
+            if (!licenses.Any())
+                return Result<IEnumerable<GetDetainedLicenseDTO>>.Failure(["No Licenses Found!"]);
+
+            var licensesDTO = licenses.Select(license => new GetDetainedLicenseDTO
+            {
+                DetainedLicenseId = license.DetainedLicenseId,
+                LicenseId=license.LicenseId,
+                DriverName = string.Join(" ",
+                                        new[] {
+                                            license.License.Driver?.Applicant?.Fname,
+                                            license.License.Driver?.Applicant?.Sname,
+                                            license.License.Driver?.Applicant?.Tname,
+                                            license.License.Driver?.Applicant?.Lname
+                                        }.Where(x => !string.IsNullOrWhiteSpace(x))
+                                        ),
+                FineFees = license.FineFees,
+                IsReleased=license.IsReleased,
+                Notes=license.Notes,
+                Reason=license.Reason,
+                ReleaseApplicationId=license.ReleaseApplicationId,
+                ReleaseDate=license.ReleasedDate
+            }).ToList();
+            return Result<IEnumerable<GetDetainedLicenseDTO>>.Success(licensesDTO);
+        }
+        public async Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByNationalNoAsync(string nationalNo)
+        {
+            var licenses = await uow.DetainedLicenseRepository.FindAllAsync(l=>l.License.Driver.Applicant.NationalNo==nationalNo,["License.Driver.Applicant", "ReleaseApplication"]);
+            if (!licenses.Any())
+                return Result<IEnumerable<GetDetainedLicenseDTO>>.Failure(["No Licenses Found!"]);
+
+            var licensesDTO = licenses.Select(license => new GetDetainedLicenseDTO
+            {
+                DetainedLicenseId = license.DetainedLicenseId,
+                LicenseId = license.LicenseId,
+                DriverName = string.Join(" ",
+                                        new[] {
+                                            license.License.Driver?.Applicant?.Fname,
+                                            license.License.Driver?.Applicant?.Sname,
+                                            license.License.Driver?.Applicant?.Tname,
+                                            license.License.Driver?.Applicant?.Lname
+                                        }.Where(x => !string.IsNullOrWhiteSpace(x))
+                                        ),
+                FineFees = license.FineFees,
+                IsReleased = license.IsReleased,
+                Notes = license.Notes,
+                Reason = license.Reason,
+                ReleaseApplicationId = license.ReleaseApplicationId,
+                ReleaseDate = license.ReleasedDate
+            }).ToList();
+            return Result<IEnumerable<GetDetainedLicenseDTO>>.Success(licensesDTO);
+        }
+        public async Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByApplicantIdAsync(int applicantId)
+        {
+            var licenses = await uow.DetainedLicenseRepository.FindAllAsync(l => l.License.Driver.applicantId == applicantId, ["License.Driver.Applicant", "ReleaseApplication"]);
+            if (!licenses.Any())
+                return Result<IEnumerable<GetDetainedLicenseDTO>>.Failure(["No Licenses Found!"]);
+
+            var licensesDTO = licenses.Select(license => new GetDetainedLicenseDTO
+            {
+                DetainedLicenseId = license.DetainedLicenseId,
+                LicenseId = license.LicenseId,
+                DriverName = string.Join(" ",
+                                        new[] {
+                                            license.License.Driver?.Applicant?.Fname,
+                                            license.License.Driver?.Applicant?.Sname,
+                                            license.License.Driver?.Applicant?.Tname,
+                                            license.License.Driver?.Applicant?.Lname
+                                        }.Where(x => !string.IsNullOrWhiteSpace(x))
+                                        ),
+                FineFees = license.FineFees,
+                IsReleased = license.IsReleased,
+                Notes = license.Notes,
+                Reason = license.Reason,
+                ReleaseApplicationId = license.ReleaseApplicationId,
+                ReleaseDate = license.ReleasedDate
+            }).ToList();
+            return Result<IEnumerable<GetDetainedLicenseDTO>>.Success(licensesDTO);
+        }
+
+        public async Task<Result<int>> ReleaseLicenseAsync(int applicantionId)
+        {
+            var DetainedApp = await uow.ApplicationRepository.FindAsync(l => l.AppID == applicantionId &&l.AppStatus == AppStatuses.Approved && l.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense, ["DetainedLicense"]);
+            if(DetainedApp is null)
+                return Result<int>.Failure(["No Approved Application Found"]);
+            var detainedLicense = DetainedApp.DetainedLicense;
+            if (detainedLicense is null)
+                return Result<int>.Failure(["No Detained License Found"]);
+            var license = await uow.LicenseRepository.GetByIdAsync(detainedLicense.LicenseId);
+
+            if(license is null)
+                return Result<int>.Failure(["No License Found"]);
+
+            detainedLicense.ReleaseApplicationId = applicantionId;
+            detainedLicense.IsReleased = true;
+            detainedLicense.ReleasedDate = DateTime.UtcNow;
+
+            license.IsDetained = false;
+            DetainedApp.AppStatus = AppStatuses.Completed;
+           
+
+             uow.DetainedLicenseRepository.Update(detainedLicense);
+             uow.LicenseRepository.Update(license);
+             uow.ApplicationRepository.Update(DetainedApp);
+            uow.Complete();
+
+            return Result<int>.Success(license.LicenseId);
+        }
+        }
 }

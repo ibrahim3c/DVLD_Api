@@ -54,5 +54,8 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<int>> ApplyForReplacementDamagedLicenseApplicationAsync(int licenseId);
         Task<Result<int>> ApplyForReplacementLostLicenseApplicationAsync(int licenseId);
 
+        // release LicenseApp
+        Task<Result<int>> ApplyForReleaseLicenseApplicationAsync(int licenseId);
+
     }
 }

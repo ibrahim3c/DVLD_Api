@@ -16,7 +16,9 @@ namespace DVLD.Core.Models
             public Applicant Applicant { get; set; } = default!;
             public ApplicationType AppType { get; set; } = default!;
             public LicenseClass? LicenseClass { get; set; } = default!;
-
+            public DetainedLicense? DetainedLicense { get; set; }
             public ICollection<TestAppointment>? TestAppointments { get; set; }=new List<TestAppointment>();
+
+
         }
     }

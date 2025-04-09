@@ -20,9 +20,34 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) {
 
+        /*
+                                                                           نصيحة ترتيب:
+    لو هتخلي كل الـ configurations في method واحدة (زي AddServices)، يبقى:
+
+                                             الكاش والتسجيل بتاعه.
+                       تسجيل كل الـ services اللي ممكن تعتمد عليه.
+                                                           EF Core.
+                                                          Identity.
+                                                               JWT.
+                               إعدادات خارجية زي SendGrid, SMTP, إل
+         */
+        // in-memory caching
+        services.AddScoped<ICachingService, CachingService>();
+        services.AddMemoryCache(opts =>
+        {
+            opts.SizeLimit = 1024;
+        });
+
+        //validators
+        services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
+        services.AddScoped<IValidator<ApplicantDTO>, ApplicantDTOValidator>();
+        services.AddScoped<IValidator<UpdateApplicationDTO>, UpdateApplicationDTOValidator>();
+        services.AddScoped<IValidator<DetainedLicenseDTO>, DetainedLicenseDTOValidator>();
+        services.AddScoped<IValidator<AddLicenseDTO>, AddLicenseDTOValidator>();
+        services.AddScoped<IValidator<AddInternationalLicenseDTO>, AddInternationalLicenseDTOValidator>();
+        services.AddScoped<IValidator<RenewLicenseApplicationDTO>, RenewLicenseApplicationDTOValidator>();
 
         // u can do DepenencyInjection Class for Dal and one for Core layer :()
-
         services.AddScoped<IUOW, UOW>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRolesService, RoleService>();
@@ -35,11 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IMailingService, MainlingService>();
 
-        services.AddScoped<IValidator<UserRegisterDTO>, UserRegisterDTOValidator>();
-        services.AddScoped<IValidator<ApplicantDTO>, ApplicantDTOValidator>();
-        services.AddScoped<IValidator<UpdateApplicationDTO>, UpdateApplicationDTOValidator>();
-        services.AddScoped<IValidator<DetainedLicenseDTO>, DetainedLicenseDTOValidator>();
-        services.AddScoped<IValidator<AddLicenseDTO>, AddLicenseDTOValidator>();
+
 
         //sendGrid
         services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));
@@ -101,7 +122,7 @@ public static class DependencyInjection
                      );
         #endregion
 
-
+       
         
         return services;
 

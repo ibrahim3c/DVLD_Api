@@ -134,6 +134,54 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        //Detain License
+        [HttpPost("DetainLicense")]
+        public async Task<IActionResult> DetainLicenseAsync (DetainedLicenseDTO licenseDTO)
+        {
+            var result = await licenseService.DetainLicenseAsync(licenseDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+        [HttpGet("GetAllDetainedLicenses")]
+        public async Task<IActionResult> GetAllDetainedLicensesAsync()
+        {
+            var result = await licenseService.GetAllDetainedLicensesAsync();
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+        [HttpGet("GetAllDetainedLicensesByNationalNo")]
+        public async Task<IActionResult> GetAllDetainedLicensesByNationalNoAsync([FromQuery]string nationalNo)
+        {
+            var result = await licenseService.GetAllDetainedLicensesByNationalNoAsync(nationalNo);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllDetainedLicensesByApplicantId/{applicantId}")]
+        public async Task<IActionResult> GetAllDetainedLicensesByApplicantIdAsync(int applicantId)
+        {
+            var result = await licenseService.GetAllDetainedLicensesByApplicantIdAsync(applicantId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        // release License
+        [HttpPost("ReleaseLicense/{applicationId}")]
+        public async Task<IActionResult> ReleaseLicenseAsync(int applicationId)
+        {
+            var result = await licenseService.ReleaseLicenseAsync(applicationId);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+
+
 
     }
 }

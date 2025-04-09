@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace DVLD.Core.Validators
 {
-    public class DetainedLicenseDTOValidator:AbstractValidator<DetainedLicenseDTO>
+    public class DetainedLicenseDTOValidator : AbstractValidator<DetainedLicenseDTO>
     {
         public DetainedLicenseDTOValidator()
         {
@@ -29,4 +29,5 @@ namespace DVLD.Core.Validators
             RuleFor(x => x.Notes)
                 .MaximumLength(500).WithMessage("Notes must be at most 500 characters.");
         }
+    }
 }
