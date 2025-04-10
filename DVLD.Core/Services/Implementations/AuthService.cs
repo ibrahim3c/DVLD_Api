@@ -77,10 +77,10 @@ namespace DVLD.Core.Services.Implementations
             //  Create a new user
             var user = new AppUser
             {
-                UserName = userRegisterDTO.Email, // Assuming username is email
+                UserName = userRegisterDTO.Fname+" "+userRegisterDTO.Lname, //TODO:
                 Email = userRegisterDTO.Email,
                 IsActive = true ,// Set default active status
-                PhoneNumber = userRegisterDTO.PhoneNumber
+                PhoneNumber = userRegisterDTO.PhoneNumber                
             };
 
             var result = await userManager.CreateAsync(user, userRegisterDTO.Password);
@@ -232,7 +232,7 @@ namespace DVLD.Core.Services.Implementations
             // Create a new user
             var user = new AppUser
             {
-                UserName = userRegisterDTO.Email, // Assuming username is email
+                UserName = userRegisterDTO.Fname + " " + userRegisterDTO.Lname, //TODO:
                 Email = userRegisterDTO.Email,
                 IsActive = true ,// Set default active status
                 PhoneNumber = userRegisterDTO.PhoneNumber,
@@ -446,7 +446,7 @@ namespace DVLD.Core.Services.Implementations
             //  Create a new user
             var user = new AppUser
             {
-                UserName = userRegisterDTO.Email, // Assuming username is email
+                UserName = userRegisterDTO.Fname + " " + userRegisterDTO.Lname, //TODO:
                 Email = userRegisterDTO.Email,
                 IsActive = true, // Set default active status
                 EmailConfirmed=false ,

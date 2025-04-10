@@ -4,10 +4,11 @@ namespace DVLD.Core.DTOs
 {
     public class UserDTO
     {
+        //[Required]
+        //[StringLength(255, MinimumLength = 5, ErrorMessage = "Address must be between 5 and 255 characters.")]
+        //public string Address { get; set; } = default!;
         [Required]
-        [StringLength(255, MinimumLength = 5, ErrorMessage = "Address must be between 5 and 255 characters.")]
-        public string Address { get; set; } = default!;
-
+        public string UserName { get; set; } = default;
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]

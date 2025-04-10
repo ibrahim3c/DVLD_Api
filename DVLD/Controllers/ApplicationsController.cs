@@ -1,12 +1,15 @@
-﻿using DVLD.Core.DTOs;
+﻿using DVLD.Core.Constants;
+using DVLD.Core.DTOs;
 using DVLD.Core.Helpers;
 using DVLD.Core.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ApplicationsController : ControllerBase
     {
         private readonly IApplicationService applicationService;
@@ -46,7 +49,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetApplicationById/{id}" ,Name = "GetApplicationById")]
         public async Task<IActionResult> GetApplicationByIdAsync(int id)
         {
             var result = await applicationService.GetApplicationByIdAsync(id);
@@ -80,7 +83,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
-
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPut("Accept/{applicationId}")]
         public async Task<IActionResult> AcceptApplication(int applicationId)
         {
@@ -89,7 +92,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
-
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPut("Reject/{applicationId}")]
         public async Task<IActionResult> RejectApplication(int applicationId)
         {
@@ -108,7 +111,8 @@ namespace DVLD.Api.Controllers
             var result = await applicationService.ApplyForNewLocalDrivingLincense(applicantId, classLicensId);
             if (result.IsSuccess)
                 //return Ok(result);
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
             return BadRequest(result);
         }
 
@@ -206,7 +210,9 @@ namespace DVLD.Api.Controllers
             var result = await applicationService.ApplyForNewInternationalLicenseApplicationAsync(applicantId);
             if (result.IsSuccess)
                 //return Ok(result);
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
+
             return BadRequest(result);
         }
         [HttpGet("GetAllInternationalLicenseApps")]
@@ -256,7 +262,9 @@ namespace DVLD.Api.Controllers
         {
             var result = await applicationService.ApplyForRenewLicenseApplicationAsync(licenseId);
             if (result.IsSuccess)
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
+
             return BadRequest(result);
         }
 
@@ -311,7 +319,9 @@ namespace DVLD.Api.Controllers
         {
             var result = await applicationService.ApplyForReplacementDamagedLicenseApplicationAsync(licenseId);
             if (result.IsSuccess)
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
+
             return BadRequest(result);
         }
         [HttpPost("ApplyForReplacementLostLicenseApplicationAsync/{licenseId}")]
@@ -319,7 +329,9 @@ namespace DVLD.Api.Controllers
         {
             var result = await applicationService.ApplyForReplacementLostLicenseApplicationAsync(licenseId);
             if (result.IsSuccess)
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
+
             return BadRequest(result);
         }
         [HttpGet("GetAllReplaceForDamagedLicenseApps")]
@@ -406,11 +418,13 @@ namespace DVLD.Api.Controllers
         {
             var result = await applicationService.ApplyForReleaseLicenseApplicationAsync(licenseId);
             if (result.IsSuccess)
-                return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
+                return CreatedAtRoute("GetApplicationById", new { id = result.Value }, result);
+
             return BadRequest(result);
         }
 
-        
+
 
         #endregion
 

@@ -1,6 +1,7 @@
 ﻿using DVLD.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace DVLD.Dal.Configurations
 {
@@ -34,6 +35,9 @@ namespace DVLD.Dal.Configurations
             builder.HasOne(a => a.LicenseClass)
                     .WithMany(a => a.Applications)
                     .HasForeignKey(a => a.LicenseClassId);
+
+
+          
 
         }
     }

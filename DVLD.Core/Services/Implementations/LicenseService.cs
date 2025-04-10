@@ -626,15 +626,16 @@ namespace DVLD.Core.Services.Implementations
 
         public async Task<Result<int>> ReleaseLicenseAsync(int applicantionId)
         {
-            var DetainedApp = await uow.ApplicationRepository.FindAsync(l => l.AppID == applicantionId &&l.AppStatus == AppStatuses.Approved && l.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense, ["DetainedLicense"]);
-            if(DetainedApp is null)
+            var DetainedApp = await uow.ApplicationRepository.FindAsync(l => l.AppID == applicantionId && l.AppStatus == AppStatuses.Approved && l.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense, ["DetainedLicense"]);
+            if (DetainedApp is null)
                 return Result<int>.Failure(["No Approved Application Found"]);
-            var detainedLicense = DetainedApp.DetainedLicense;
+            var detainedLicense = await uow.DetainedLicenseRepository.FindAsync(d=>d.ReleaseApplicationId==DetainedApp.AppID);
+            //var detainedLicense = DetainedApp.DetainedLicense;
             if (detainedLicense is null)
                 return Result<int>.Failure(["No Detained License Found"]);
             var license = await uow.LicenseRepository.GetByIdAsync(detainedLicense.LicenseId);
 
-            if(license is null)
+            if (license is null)
                 return Result<int>.Failure(["No License Found"]);
 
             detainedLicense.ReleaseApplicationId = applicantionId;
@@ -643,14 +644,16 @@ namespace DVLD.Core.Services.Implementations
 
             license.IsDetained = false;
             DetainedApp.AppStatus = AppStatuses.Completed;
-           
 
-             uow.DetainedLicenseRepository.Update(detainedLicense);
-             uow.LicenseRepository.Update(license);
-             uow.ApplicationRepository.Update(DetainedApp);
+
+            uow.DetainedLicenseRepository.Update(detainedLicense);
+            uow.LicenseRepository.Update(license);
+            uow.ApplicationRepository.Update(DetainedApp);
             uow.Complete();
 
             return Result<int>.Success(license.LicenseId);
         }
-        }
+
+
+    }
 }

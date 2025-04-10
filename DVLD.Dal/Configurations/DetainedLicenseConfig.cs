@@ -1,6 +1,7 @@
 ﻿using DVLD.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace DVLD.Dal.Configurations
 {
@@ -37,7 +38,7 @@ namespace DVLD.Dal.Configurations
 
             // Relationships
 
-            // License to DetainedLicense - One-to-One relationship
+            // License to DetainedLicense
             builder.HasOne(dl => dl.License)
                 .WithMany(l => l.DetainedLicenses)
                 .HasForeignKey(dl => dl.LicenseId)
@@ -45,9 +46,11 @@ namespace DVLD.Dal.Configurations
 
             // Application for release (One-to-One relationship)
             builder.HasOne(dl => dl.ReleaseApplication)
-                .WithOne() 
+                .WithOne()
                 .HasForeignKey<DetainedLicense>(dl => dl.ReleaseApplicationId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+
         }
     }
-  }
+
+}

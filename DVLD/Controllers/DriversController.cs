@@ -1,4 +1,6 @@
-﻿using DVLD.Core.Services.Interfaces;
+﻿using DVLD.Core.Constants;
+using DVLD.Core.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.Api.Controllers
@@ -14,6 +16,7 @@ namespace DVLD.Api.Controllers
             this.driverServices = driverServices;
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet]
         public async Task<IActionResult>GetAllDriversAsync()
         {
@@ -23,6 +26,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDriverById(int id)
         {
@@ -32,6 +36,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetDriverByApplicantId/{applicantId}")]
         public async Task<IActionResult> GetDriverByApplicantId(int applicantId)
         {
@@ -41,6 +46,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetDriverByApplicantNationalNo")]
         public async Task<IActionResult> GetDriverByApplicantId([FromQuery]string NationalNo)
         {
@@ -50,6 +56,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("IsApplicantDriver/{applicantId}")]
         public async Task<IActionResult> IsApplicantDriver(int applicantId)
         {
@@ -59,6 +66,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost]
         public async Task<IActionResult> AddDriver(int applicantId)
         {

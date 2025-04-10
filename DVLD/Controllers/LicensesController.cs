@@ -1,5 +1,7 @@
-﻿using DVLD.Core.DTOs;
+﻿using DVLD.Core.Constants;
+using DVLD.Core.DTOs;
 using DVLD.Core.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.Api.Controllers
@@ -14,6 +16,8 @@ namespace DVLD.Api.Controllers
         {
             this.licenseService = licenseService;
         }
+
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("IssueLicenseFirstTime")]
         public async Task<IActionResult> IssueLicenseFirstTime(AddLicenseDTO licenseDTO)
         {
@@ -23,6 +27,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetLicensesByApplicantId/{applicantId}")]
         public async Task<IActionResult> GetLicensesByApplicantId(int applicantId)
         {
@@ -32,6 +37,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetLicensesByDriverId/{driverId}")]
         public async Task<IActionResult> GetLicensesByDriverId(int driverId)
         {
@@ -41,6 +47,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetLicenseByLicenseId/{licenseId}")]
         public async Task<IActionResult> GetLicenseByLicenseId(int licenseId)
         {
@@ -50,6 +57,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetLicensesByNationalNo")]
         public async Task<IActionResult> GetLicensesByNationalNo([FromQuery]string nationalNo)
         {
@@ -60,6 +68,7 @@ namespace DVLD.Api.Controllers
         }
 
         // international License
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("IssueInternationalLicesnse")]
         public async Task<IActionResult> IssueInternationalLicesnse(AddInternationalLicenseDTO licenseDTO)
         {
@@ -68,6 +77,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+        [Authorize]
         [HttpGet("GetInternationalLicensesByApplicantId/{applicantId}")]
         public async Task<IActionResult> GetInternationalLicensesByApplicantId(int applicantId)
         {
@@ -77,6 +87,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetInternationalLicensesByDriverId/{driverId}")]
         public async Task<IActionResult> GetInternationalLicensesByDriverId(int driverId)
         {
@@ -86,6 +97,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetInternationalLicenseByLicenseId/{licenseId}")]
         public async Task<IActionResult> GetInternationalLicenseByLicenseId(int licenseId)
         {
@@ -95,6 +107,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetInternationalLicensesByNationalNo")]
         public async Task<IActionResult> GetInternationalLicensesByNationalNo([FromQuery] string nationalNo)
         {
@@ -105,6 +118,7 @@ namespace DVLD.Api.Controllers
         }
 
         //renew license
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("RenewLicense")]
         public async Task<IActionResult> RenewLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
         {
@@ -116,6 +130,7 @@ namespace DVLD.Api.Controllers
 
 
         // replace For Damaged or Lost License
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("ReplaceForDamagedLicense")]
         public async Task<IActionResult> ReplaceForDamagedLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
         {
@@ -124,7 +139,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
-
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("ReplaceForLostLicense")]
         public async Task<IActionResult> ReplaceForLostLicenseAsync(RenewLicenseApplicationDTO licenseDTO)
         {
@@ -135,6 +150,7 @@ namespace DVLD.Api.Controllers
         }
 
         //Detain License
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("DetainLicense")]
         public async Task<IActionResult> DetainLicenseAsync (DetainedLicenseDTO licenseDTO)
         {
@@ -143,6 +159,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetAllDetainedLicenses")]
         public async Task<IActionResult> GetAllDetainedLicensesAsync()
         {
@@ -151,6 +168,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetAllDetainedLicensesByNationalNo")]
         public async Task<IActionResult> GetAllDetainedLicensesByNationalNoAsync([FromQuery]string nationalNo)
         {
@@ -159,7 +177,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
-
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetAllDetainedLicensesByApplicantId/{applicantId}")]
         public async Task<IActionResult> GetAllDetainedLicensesByApplicantIdAsync(int applicantId)
         {
@@ -170,6 +188,7 @@ namespace DVLD.Api.Controllers
         }
 
         // release License
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("ReleaseLicense/{applicationId}")]
         public async Task<IActionResult> ReleaseLicenseAsync(int applicationId)
         {

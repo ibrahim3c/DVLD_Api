@@ -1,5 +1,7 @@
 using DVLD.Api;
 using DVLD.Api.Middlewares;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 namespace DVLD
@@ -15,7 +17,8 @@ namespace DVLD
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+
 
             #region myConfigs
             //Add configuration from the secret.json file
@@ -45,12 +48,25 @@ namespace DVLD
             app.UseStaticFiles();   
             app.UseHttpsRedirection();
             app.UseMiddleware<GlobalExceptionHandler>();
+            app.UseCors("AllowAll"); // Apply CORS before Authorization
+            //app.UseCustomCors(); // or using cutom middleware
             app.UseAuthentication();
             app.UseAuthorization();
 
 
             app.MapControllers();
 
+            // it cause problem of more than dbContext was found
+            //health check
+            app.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            //health check with dashboard
+            app.MapHealthChecksUI(opts =>
+            {
+                opts.UIPath = "/health-ui";
+            });
             app.Run();
         }
     }

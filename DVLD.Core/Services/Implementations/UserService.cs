@@ -35,6 +35,7 @@ namespace DVLD.Core.Services.Implementations
         {
             var users = await userManager.Users.Select(u=> new UserDTO
             {
+                UserName=u.UserName,
                 Email=u.Email,
                 PhoneNumber=u.PhoneNumber,
                 IsActive=u.IsActive
@@ -51,6 +52,7 @@ namespace DVLD.Core.Services.Implementations
                 return ResultDTO<UserDTO>.Failure(["No User Found"]);
             var userDTO = new UserDTO
             {
+                UserName = user.UserName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 IsActive = user.IsActive
@@ -94,6 +96,7 @@ namespace DVLD.Core.Services.Implementations
                 return ResultDTO<UserDTO>.Failure(["No User Found"]);
             var userDTO = new UserDTO
             {
+                UserName = user.UserName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 IsActive = user.IsActive
@@ -139,7 +142,7 @@ namespace DVLD.Core.Services.Implementations
 
             var user = new AppUser
             {
-                UserName = createduserDTO.Email,  // Use email as username
+                UserName = createduserDTO.FirstName+" "+createduserDTO.LastName,  // Use email as username
                 Email = createduserDTO.Email,
                 PhoneNumber = createduserDTO.PhoneNumber,
                 IsActive = createduserDTO.IsActive, // Ensure this property exists in AppUser

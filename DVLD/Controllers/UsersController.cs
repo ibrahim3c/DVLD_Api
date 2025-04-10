@@ -1,6 +1,8 @@
 ﻿using Core.DTOS;
+using DVLD.Core.Constants;
 using DVLD.Core.DTOs;
 using DVLD.Core.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVLD.Api.Controllers
@@ -16,6 +18,7 @@ namespace DVLD.Api.Controllers
         }
 
         [HttpGet("GetAllUsers")]
+        [Authorize(Roles = Roles.AdminRole)]
         public async Task<IActionResult> GetAllUsersAsync()
         {
             var result = await _userService.GetAllUsersAsync();
@@ -24,6 +27,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetUser/{userID}")]
         public async Task<IActionResult> GetUserByIdAsync(string userID)
         {
@@ -33,6 +37,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpGet("GetUserByEmail/{email}")]
         public async Task<IActionResult> GetUserByEmailAsync(string email)
         {
@@ -42,6 +47,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetRolesOfUser/{userId}")]
         public async Task<IActionResult> GetRolesOfUserAsync(string userId)
         {
@@ -51,6 +57,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetRolesNameOfUser/{userId}")]
         public async Task<IActionResult> GetRolesNameOfUserAsync(string userId)
         {
@@ -59,6 +66,7 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+
 
         [HttpPost("LockUnLock/{id}")]
         public async Task<IActionResult> LockUnLock(string id)
@@ -69,6 +77,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("AddUser")]
         public async Task<IActionResult> AddUserAsync([FromBody] CreatedUserDTO createdUserDTO)
         {
@@ -78,6 +87,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize]
         [HttpPut("UpdateUser")]
         public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDTO userDTO)
         {
@@ -87,6 +97,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpDelete("DeleteUser/{userID}")]
         public async Task<IActionResult> DeleteUserAsync(string userID)
         {
@@ -96,6 +107,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpDelete("DeleteUserByEmail/{email}")]
         public async Task<IActionResult> DeleteUserByEmailAsync(string email)
         {
@@ -105,6 +117,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetRolesForManaging/{userId}")]
         public async Task<IActionResult> GetRolesForManagingAsync(string userId)
         {
@@ -114,6 +127,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
+        [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("ManageUserRoles")]
         public async Task<IActionResult> ManageUserRolesAsync([FromBody] ManageRolesDTO manageRolesDTO)
         {

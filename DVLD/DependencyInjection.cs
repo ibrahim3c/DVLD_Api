@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 namespace DVLD.Api;
@@ -31,6 +32,30 @@ public static class DependencyInjection
                                                                JWT.
                                إعدادات خارجية زي SendGrid, SMTP, إل
          */
+
+        // Add CORS
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
+
+        // health check
+        services.AddHealthChecks()
+            .AddSqlServer(configuration.GetConnectionString("DefaultConnection")!);
+
+
+        // it cause problem of more than dbContext was found
+        ////health check with Dashboard
+        //services.AddHealthChecksUI(setup =>
+        //{
+        //    setup.AddHealthCheckEndpoint("DVLD", "/health");
+        //}).AddInMemoryStorage();
+
         // in-memory caching
         services.AddScoped<ICachingService, CachingService>();
         services.AddMemoryCache(opts =>
@@ -122,8 +147,41 @@ public static class DependencyInjection
                      );
         #endregion
 
-       
-        
+
+        // swagger configs to add JWT
+        // click Authorize button
+        // then put in value => Beared {token}
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+
+            // Add JWT Authentication support to Swagger
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+            });
+        });
+
+
         return services;
 
 

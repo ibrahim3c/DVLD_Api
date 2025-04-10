@@ -25,7 +25,7 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesAsync();
         Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByNationalNoAsync(string nationalNo);
         Task<Result<IEnumerable<GetDetainedLicenseDTO>>> GetAllDetainedLicensesByApplicantIdAsync(int applicantId);
-        Task<Result<int>> ReleaseLicenseAsync(int  applicantionId);
+        Task<Result<int>> ReleaseLicenseAsync(int applicantionId);
 
 
 

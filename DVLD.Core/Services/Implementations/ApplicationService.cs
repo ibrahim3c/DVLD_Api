@@ -203,7 +203,7 @@ namespace DVLD.Core.Services.Implementations
                 ApplicationType = app.AppType.Title,
                 LicenseClass = app.LicenseClass != null ? app.LicenseClass.Name : "no License",
                 NationalNumber = app.Applicant.NationalNo,
-                ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim(),
+                ApplicantName = $"{app.Applicant.Fname ?? ""} {app.Applicant.Sname ?? ""} {app.Applicant.Tname ?? ""} {app.Applicant.Lname ?? ""}".Trim()
             });
             return Result<IEnumerable<ApplicationDTO>>.Success(apps);
         }
@@ -841,9 +841,13 @@ namespace DVLD.Core.Services.Implementations
             if (license is null)
                 return Result<int>.Failure(["No Detained License Found!"]);
 
-            if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense
-                                  && x.DetainedLicense!= null && x.DetainedLicense.LicenseId == licenseId
-                                  && x.AppStatus == AppStatuses.Pending))
+            if (await uow.DetainedLicenseRepository.FindAsync(x => x.LicenseId == licenseId
+            && x.ReleaseApplication!.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense
+             && x.ReleaseApplication.AppStatus == AppStatuses.Pending, ["ReleaseApplication"]) is not null)
+
+            //if (await uow.ApplicationRepository.AnyAsync(x => x.AppTypeID == (int)AppTypes.ReleaseDetainedDrivingLicense
+            //                      && x.DetainedLicense != null && x.DetainedLicense.LicenseId == licenseId
+            //                      && x.AppStatus == AppStatuses.Pending))
                 return Result<int>.Failure(["U already have a pending application."]);
 
             var applicantId = license.Application.ApplicantId;
@@ -866,5 +870,6 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(application.AppID);
         }
+
     }
 }
