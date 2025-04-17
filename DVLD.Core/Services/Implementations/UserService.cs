@@ -142,7 +142,7 @@ namespace DVLD.Core.Services.Implementations
 
             var user = new AppUser
             {
-                UserName = createduserDTO.FirstName+" "+createduserDTO.LastName,  // Use email as username
+                UserName = createduserDTO.FirstName+createduserDTO.LastName,  // Use email as username
                 Email = createduserDTO.Email,
                 PhoneNumber = createduserDTO.PhoneNumber,
                 IsActive = createduserDTO.IsActive, // Ensure this property exists in AppUser

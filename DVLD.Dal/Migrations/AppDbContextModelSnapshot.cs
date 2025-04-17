@@ -321,7 +321,7 @@ namespace DVLD.Dal.Migrations
 
                     b.HasKey("CountryId");
 
-                    b.ToTable("Countries");
+                    b.ToTable("Countries", (string)null);
 
                     b.HasData(
                         new
@@ -978,7 +978,7 @@ namespace DVLD.Dal.Migrations
                         .IsUnique()
                         .HasFilter("[TestAppointmentId] IS NOT NULL");
 
-                    b.ToTable("Tests");
+                    b.ToTable("Tests", (string)null);
                 });
 
             modelBuilder.Entity("DVLD.Core.Models.TestAppointment", b =>
@@ -1013,7 +1013,7 @@ namespace DVLD.Dal.Migrations
 
                     b.HasIndex("TestTypeId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("DVLD.Core.Models.TestType", b =>
@@ -1187,7 +1187,7 @@ namespace DVLD.Dal.Migrations
 
             modelBuilder.Entity("DVLD.Core.Models.AppUser", b =>
                 {
-                    b.OwnsMany("DVLD.Core.Models.RefreshToken", "RefreshTokens", b1 =>
+                    b.OwnsMany("DVLD.Core.Models.AppUser.RefreshTokens#DVLD.Core.Models.RefreshToken", "RefreshTokens", b1 =>
                         {
                             b1.Property<string>("AppUserId")
                                 .HasColumnType("nvarchar(450)");
@@ -1213,7 +1213,7 @@ namespace DVLD.Dal.Migrations
 
                             b1.HasKey("AppUserId", "Id");
 
-                            b1.ToTable("RefreshToken");
+                            b1.ToTable("RefreshToken", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("AppUserId");
