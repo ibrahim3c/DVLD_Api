@@ -381,7 +381,7 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result> ApproveTheApplicationAsync(int appId)
         {
-            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            if (await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                 && a.AppStatus == AppStatuses.Completed))
                 return Result.Failure(["this Application is Completed"]);
 
@@ -389,7 +389,7 @@ namespace DVLD.Core.Services.Implementations
         }
         public async Task<Result> RejectTheApplicationAsync(int appId)
         {
-            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            if (await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                  && a.AppStatus == AppStatuses.Completed))
                 return Result.Failure(["this Application is Completed"]);
 

@@ -38,6 +38,16 @@ namespace DVLD.Api.Controllers
         }
 
         [Authorize]
+        [HttpGet("GetAllLicenseClasses")]
+        public async Task<IActionResult> GetAllLicenseClasses()
+        {
+            var result = await licenseService.GetAllLicenseCLassesAsync();
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [Authorize]
         [HttpGet("GetLicensesByDriverId/{driverId}")]
         public async Task<IActionResult> GetLicensesByDriverId(int driverId)
         {

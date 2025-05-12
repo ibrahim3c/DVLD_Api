@@ -4,6 +4,7 @@ using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
 using FluentValidation;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -32,6 +33,28 @@ namespace DVLD.Core.Services.Implementations
             this.addInternationalLicenseDTOValidator = addInternationalLicenseDTOValidator;
             this.renewLicenseApplicationDTOValidator = renewLicenseApplicationDTOValidator;
         }
+
+        // LicenseClasses
+        public async Task<Result<IEnumerable<LicenseClassDTO>>> GetAllLicenseCLassesAsync()
+        {
+            var classes = (await uow.LicenseClassRepository.GetAllAsync()).Select(l =>
+                new LicenseClassDTO
+                {
+                    Description = l.Description,
+                    Fee = l.Fee,
+                    Id = l.Id,
+                    MinAge = l.MinAge,
+                    Name = l.Name,
+                    ValidityPeriod = l.ValidityPeriod
+                }
+            );
+
+            if (!classes.Any()) 
+                return Result<IEnumerable<LicenseClassDTO>>.Failure(["No License Classes Found"]);
+
+            return Result<IEnumerable<LicenseClassDTO>>.Success(classes);
+        }
+
         public async Task<Result<IEnumerable<GetLicenseDTO>>> GetAllLicensesAsync()
         {
 

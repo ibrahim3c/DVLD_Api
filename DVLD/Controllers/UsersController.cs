@@ -12,9 +12,11 @@ namespace DVLD.Api.Controllers
     public class UsersController:ControllerBase
     {
         private readonly IUserService _userService;
-        public UsersController(IUserService userService)
+        private readonly IApplicantService applicantService;
+        public UsersController(IUserService userService, IApplicantService applicantService)
         {
             _userService = userService;
+            this.applicantService = applicantService;
         }
 
         [HttpGet("GetAllUsers")]
@@ -57,7 +59,7 @@ namespace DVLD.Api.Controllers
             return BadRequest(result);
         }
 
-        [Authorize(Roles = Roles.AdminRole)]
+        //[Authorize(Roles = Roles.AdminRole)]
         [HttpGet("GetRolesNameOfUser/{userId}")]
         public async Task<IActionResult> GetRolesNameOfUserAsync(string userId)
         {
@@ -136,5 +138,14 @@ namespace DVLD.Api.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+
+        //[HttpGet("GetApplicantId/{userId}")]
+        //public async Task<IActionResult> GetApplicantIdAsync(string userId)
+        //{
+        //    var result = await applicantService.GetApplicantIdByUserId(userId);
+        //    if (result.IsSuccess)
+        //        return Ok(result);
+        //    return BadRequest(result);
+        //}
     }
 }

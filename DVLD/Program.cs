@@ -1,6 +1,5 @@
 using DVLD.Api;
 using DVLD.Api.Middlewares;
-using DVLD.Core.Helpers;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
@@ -36,19 +35,18 @@ namespace DVLD
             //RateLimiter
             builder.Services.AddRateLimiter(options =>
             {
-                options.AddPolicy("Token", context =>
-        RateLimitPartition.GetTokenBucketLimiter(
-        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new TokenBucketRateLimiterOptions
-            {
-                TokenLimit = 10, 
-                TokensPerPeriod = 1,
-                                    
-                ReplenishmentPeriod = TimeSpan.FromSeconds(1), 
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
-                options.RejectionStatusCode = 429;
+                options.AddPolicy("TokenBucket", context =>
+                RateLimitPartition.GetTokenBucketLimiter(
+                 partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 10, 
+                    TokensPerPeriod = 1,                        
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(1), 
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+                    options.RejectionStatusCode = 429;
             });
 
 

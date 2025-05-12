@@ -6,6 +6,7 @@
         public string? Token { get; set; }
         public bool Success { get; set; }
         public DateTime? ExpiresOn { get; set; }
+        public string UserId {  get; set; }
 
     }
 }

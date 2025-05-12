@@ -3,6 +3,7 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -131,7 +132,7 @@ namespace DVLD.Core.Services.Implementations
         #region Test And TestAppointment
         public async Task<Result<int>> ScheduleVisionTestAsync(int appId, int applicantId)
         {
-            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            if (await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
             && a.AppStatus==AppStatuses.Completed))
                 return Result<int>.Failure(["this Application is Completed"]);
 
@@ -188,10 +189,9 @@ namespace DVLD.Core.Services.Implementations
 
 
         }
-
         public async Task<Result<int>> ScheduleWrittenTestAsync(int appId, int applicantId)
         {
-            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            if (await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                 && a.AppStatus == AppStatuses.Completed))
                 return Result<int>.Failure(["this Application is Completed"]);
 
@@ -256,10 +256,9 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(testAppointment.Id);
         }
-
         public async Task<Result<int>> SchedulePracticalTestAsync(int appId, int applicantId)
         {
-            if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
+            if (await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                  && a.AppStatus == AppStatuses.Completed))
                 return Result<int>.Failure(["this Application is Completed"]);
 
@@ -326,7 +325,6 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(testAppointment.Id);
         }
-
         public async Task<Result> EditTestAppointmentAsync(int testAppointmentId, EditTestAppointmentDTO editTestAppointmentDTO)
         {
             var testAppointment = await uow.TestAppointmentRepository.FindAsync(t => t.Id == testAppointmentId, ["Test"]);
@@ -343,7 +341,6 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result.Success();
         }
-
         public async Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO)
         {
             var testAppointment = await uow.TestAppointmentRepository.FindAsync(a => a.Id == completeTestDTO.TestAppointmentId);
@@ -399,6 +396,79 @@ namespace DVLD.Core.Services.Implementations
                 return Result.Failure([$"You didn't pass the {testType}"]);
 
             return Result.Success();
+        }
+
+        public async Task<Result<TestAppointmentDTO>>GetTestAppointmentById(int testAppointmentId)
+        {
+            var testAppontment = await uow.TestAppointmentRepository.FindAsync(a => a.Id == testAppointmentId, ["Application.Applicant"]);
+            if (testAppontment is null)
+                return Result<TestAppointmentDTO>.Failure(["No Test Appoinment Found"]);
+
+            var applicant = testAppontment.Application.Applicant;
+            var fullName = applicant.Fname + " " + applicant.Sname + " " + applicant.Tname + " " + applicant.Lname;
+            var testTypeName = Enum.GetName(typeof(TestTypes), testAppontment.TestTypeId);
+
+
+            var testAppoinmentDTO = new TestAppointmentDTO
+            {
+                AppointmentId = testAppontment.Id,
+                ApplicantName = fullName,
+               ApplicantNationalNo= testAppontment.Application.Applicant.NationalNo,
+               AppointmentDate=testAppontment.AppointmentDate,
+               IsLooked=testAppontment.IsLooked,
+               PaidFee=testAppontment.PaidFee,
+               TestType= testTypeName??""
+            };
+
+            return Result<TestAppointmentDTO>.Success(testAppoinmentDTO);
+        }
+
+        public async Task<Result<List<TestAppointmentDTO>>> GetAllTestAppoinments()
+        {
+            var testAppontments = (await uow.TestAppointmentRepository.GetAllAsync(["Application.Applicant"])).ToList();
+            if (!testAppontments.Any())
+                return Result<List<TestAppointmentDTO>>.Failure(["No Test Appoinment Found"]);
+
+            var testAppoinments = testAppontments.Select(testAppontment =>
+            {
+                return new TestAppointmentDTO
+                {
+                    AppointmentId= testAppontment.Id,
+                    ApplicantName = testAppontment.Application.Applicant.Fname + " " + testAppontment.Application.Applicant.Sname + " " + testAppontment.Application.Applicant.Tname + " " + testAppontment.Application.Applicant.Lname,
+                    ApplicantNationalNo = testAppontment.Application.Applicant.NationalNo,
+                    AppointmentDate = testAppontment.AppointmentDate,
+                    IsLooked = testAppontment.IsLooked,
+                    PaidFee = testAppontment.PaidFee,
+                    TestType = Enum.GetName(typeof(TestTypes), testAppontment.TestTypeId) ?? ""
+                };
+            }).ToList();
+
+
+
+            return Result<List<TestAppointmentDTO>>.Success(testAppoinments);
+        }
+
+        public async Task<Result<List<TestAppointmentDTO>>> GetAllTestAppoinmentByApplicantId(int applicantId)
+        {
+            var testAppontments = (await uow.TestAppointmentRepository.FindAllAsync(a=>a.Application.ApplicantId==applicantId,["Application.Applicant"])).ToList();
+            if (!testAppontments.Any())
+                return Result<List<TestAppointmentDTO>>.Failure(["No Test Appoinment Found"]);
+
+            var testAppoinments = testAppontments.Select(testAppontment =>
+            {
+                return new TestAppointmentDTO
+                {
+                    AppointmentId = testAppontment.Id,
+                    ApplicantName = testAppontment.Application.Applicant.Fname + " " + testAppontment.Application.Applicant.Sname + " " + testAppontment.Application.Applicant.Tname + " " + testAppontment.Application.Applicant.Lname,
+                    ApplicantNationalNo = testAppontment.Application.Applicant.NationalNo,
+                    AppointmentDate = testAppontment.AppointmentDate,
+                    IsLooked = testAppontment.IsLooked,
+                    PaidFee = testAppontment.PaidFee,
+                    TestType = Enum.GetName(typeof(TestTypes), testAppontment.TestTypeId) ?? ""
+                };
+            }).ToList();
+
+            return Result<List<TestAppointmentDTO>>.Success(testAppoinments);
         }
 
 

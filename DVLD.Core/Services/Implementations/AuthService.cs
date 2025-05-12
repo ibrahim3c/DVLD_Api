@@ -118,7 +118,8 @@ namespace DVLD.Core.Services.Implementations
             {
                 Success = true,
                 ExpiresOn = token.ValidTo,
-                Token = new JwtSecurityTokenHandler().WriteToken(token)
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                UserId = user.Id
             };
 
         }
@@ -141,11 +142,13 @@ namespace DVLD.Core.Services.Implementations
                 };
 
             var token = await GenerateJwtTokenAsync(user);
+
             return new AuthResultDTO()
             {
                 Success = true,
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
-                ExpiresOn = token.ValidTo
+                ExpiresOn = token.ValidTo,
+                UserId=user.Id
             };
 
 
@@ -641,7 +644,8 @@ namespace DVLD.Core.Services.Implementations
             {
                 Success = true,
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
-                ExpiresOn = token.ValidTo
+                ExpiresOn = token.ValidTo,
+                UserId= user.Id
             };
 
 
@@ -660,7 +664,9 @@ namespace DVLD.Core.Services.Implementations
                 };
 
             // generete token and  send it to user
-            await SendPasswordResetEmailAsync(user, scheme, host);
+            //await SendPasswordResetEmailAsync(user, scheme, host);
+            await SendResetPasswordEmailAsync(user);
+            
 
             return new ResultDTO<string>
             {
@@ -687,6 +693,17 @@ namespace DVLD.Core.Services.Implementations
                 $"Please reset your password by clicking this link: <a href='{callbackUrl}'>Reset Password</a>");
         }
 
+        private async Task SendResetPasswordEmailAsync(AppUser user)
+        {
+            // Generate the password reset token
+            var code = await userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Construct the reset link
+            var callbackUrl = $"https://full-stack-website-react-asp-net-eight.vercel.app/reset-password?userId={user.Id}&code={Uri.EscapeDataString(code)}";
+            // Send email with the reset link
+            await mailingService.SendMailBySendGridAsync(user.Email, "Reset Your Password",
+                $"Please reset your password by clicking this link: <a href='{callbackUrl}'>Reset Password</a>");
+        }
         public async Task<ResultDTO<string>> ResetPasswordAsync(ResetPasswordDTO resetPasswordDto)
         {
             if (string.IsNullOrWhiteSpace(resetPasswordDto.UserId) || string.IsNullOrWhiteSpace(resetPasswordDto.code))

@@ -98,5 +98,64 @@ namespace DVLD.Core.Services.Implementations
             }
         }
 
+        public async Task<byte[]> GetFileAsByteArrayAsync(string imageSrc)
+        {
+            try
+            {
+                var fullPath = Path.Combine(webHostEnvironment.WebRootPath, imageSrc);
+                if (!File.Exists(fullPath))
+                {
+                    return null; // Return null if the file doesn't exist
+                }
+
+                var fileBytes = await File.ReadAllBytesAsync(fullPath);
+                return fileBytes;
+            }
+            catch
+            {
+                return null; // Return null in case of an error
+            }
+        }
+
+        public async Task<string> UploadFileAsync(IFormFile file, string folder, HttpRequest request)
+        {
+            try
+            {
+                if (file == null || file.Length == 0) return string.Empty;
+
+                //var path = Path.Combine(webHostEnvironment.WebRootPath, folder);
+                var path = webHostEnvironment.WebRootPath + "/" + folder;
+                var extension = Path.GetExtension(file.FileName);
+                var fileName = $"{Guid.NewGuid()}{extension}";
+
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                var fullPath = Path.Combine(path, fileName);
+
+                using (FileStream fileStream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                    fileStream.Flush();
+                }
+
+                var relativePath = Path.Combine(folder, fileName).Replace("\\", "/");
+
+                // Build full public URL (e.g., https://localhost:5001/assets/images/photo.jpg)
+                var baseUrl = $"{request.Scheme}://{request.Host}";
+                var publicUrl = $"{baseUrl}/{relativePath}";
+
+                return publicUrl;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+
+
     }
 }

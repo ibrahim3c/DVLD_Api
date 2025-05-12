@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IValidator<UpdateApplicationDTO>, UpdateApplicationDTOValidator>();
         services.AddScoped<IValidator<DetainedLicenseDTO>, DetainedLicenseDTOValidator>();
         services.AddScoped<IValidator<AddLicenseDTO>, AddLicenseDTOValidator>();
+        services.AddScoped<IValidator<UserProfileDTO>, UserProfileDTOValidator>();
         services.AddScoped<IValidator<AddInternationalLicenseDTO>, AddInternationalLicenseDTOValidator>();
         services.AddScoped<IValidator<RenewLicenseApplicationDTO>, RenewLicenseApplicationDTOValidator>();
 

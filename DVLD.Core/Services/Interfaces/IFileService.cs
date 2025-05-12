@@ -8,5 +8,7 @@ namespace DVLD.Core.Services.Interfaces
         public Task DeleteFileAsync(string FilePath);
         public Task<IFormFile> GetFileAsIFormFileAsync(string imageSrc);
         Task DeleteAllFilesAsync(List<string> FilePaths);
+        Task<byte[]> GetFileAsByteArrayAsync(string imageSrc);
+        Task<string> UploadFileAsync(IFormFile file, string folder, HttpRequest request);
     }
 }

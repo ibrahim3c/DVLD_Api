@@ -104,11 +104,43 @@ namespace DVLD.Api.Controllers
 
         #endregion
 
+        #region ManageAppTypes
+        [HttpGet("GetAllApplicationTypes")]
+        public async Task<IActionResult> GetAllApplicationTypes()
+        {
+            var result = await applicationService.GetAllAppTypesAsync();
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetApplicationTypeById/{id}")]
+        public async Task<IActionResult> GetApplicationTypeById(int id)
+        {
+            var result = await applicationService.GetAppTypeByIdAsync(id);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [Authorize(Roles = Roles.AdminRole)]
+        [HttpPut("UpdateApplicationType/{id}")]
+        public async Task<IActionResult> UpdateApplicationType(int id,TypeDTO typeDTO)
+        {
+            var result = await applicationService.UpdateAppTypeAsync(id,typeDTO);
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        #endregion
+
         #region LocalDrivingLicense
         [HttpPost("ApplyForNewLocalDrivingLicense")]
-        public async Task<IActionResult> ApplyForNewLocalDrivingLincense(int applicantId, int classLicensId)
+        public async Task<IActionResult> ApplyForNewLocalDrivingLincense(ApplyForLocalAppLicenseRequest applyForLocalAppLicenseRequest)
         {
-            var result = await applicationService.ApplyForNewLocalDrivingLincense(applicantId, classLicensId);
+            var result = await applicationService.ApplyForNewLocalDrivingLincense(applyForLocalAppLicenseRequest.ApplicantId, applyForLocalAppLicenseRequest.ClassLicenseId);
             if (result.IsSuccess)
                 //return Ok(result);
                 //return CreatedAtAction(nameof(GetApplicationByIdAsync), new { id = result.Value }, result);
@@ -160,41 +192,6 @@ namespace DVLD.Api.Controllers
         public async Task<IActionResult> ScheduleVisionTest(int appId, int applicantId)
         {
             var result = await testService.ScheduleVisionTestAsync(appId, applicantId);
-            if (result.IsSuccess)
-                return Ok(result);
-            return BadRequest(result);
-        }
-
-        [HttpPost("ScheduleWrittenTest")]
-        public async Task<IActionResult> ScheduleWrittenTest(int appId, int applicantId)
-        {
-            var result = await testService.ScheduleWrittenTestAsync(appId, applicantId);
-            if (result.IsSuccess)
-                return Ok(result);
-            return BadRequest(result);
-        }
-        [HttpPost("SchedulePracticalTest")]
-        public async Task<IActionResult> SchedulePracticalTest(int appId, int applicantId)
-        {
-            var result = await testService.SchedulePracticalTestAsync(appId, applicantId);
-            if (result.IsSuccess)
-                return Ok(result);
-            return BadRequest(result);
-        }
-
-        [HttpPut("UpdateTestAppointment")]
-        public async Task<IActionResult> UpdateTestAppointment(int appointmentId,EditTestAppointmentDTO editTestAppointmentDTO)
-        {
-            var result = await testService.EditTestAppointmentAsync(appointmentId, editTestAppointmentDTO);
-            if (result.IsSuccess)
-                return Ok(result);
-            return BadRequest(result);
-        }
-
-        [HttpPost("TakeTest")]
-        public async Task<IActionResult>TakeTestAsync(CompleteTestDTO completeTestDTO)
-        {
-            var result =await testService.CompleteTestAsync(completeTestDTO);
             if (result.IsSuccess)
                 return Ok(result);
             return BadRequest(result);
@@ -310,7 +307,6 @@ namespace DVLD.Api.Controllers
 
 
         #endregion
-
 
         #region ReplaceDamagedOrLostLicenseApp
 

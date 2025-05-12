@@ -22,6 +22,9 @@ namespace DVLD.Core.Services.Interfaces
         Task<Result> CompleteTestAsync(CompleteTestDTO completeTestDTO);
         Task<Result> IsAllTestPassed(int applicantId,int appId);
         Task<Result> IsTestPassed(int applicantId, int appId, TestTypes testType);
+        Task<Result<TestAppointmentDTO>> GetTestAppointmentById(int testAppointmentId);
+        Task<Result<List<TestAppointmentDTO>>> GetAllTestAppoinments();
+        Task<Result<List<TestAppointmentDTO>>> GetAllTestAppoinmentByApplicantId(int applicantId);
 
         #endregion
     }
