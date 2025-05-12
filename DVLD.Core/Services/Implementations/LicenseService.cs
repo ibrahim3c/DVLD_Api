@@ -280,34 +280,30 @@ namespace DVLD.Core.Services.Implementations
 
 
 
-            /*
-             try
-                {
-                    await uow.LicenseRepository.AddAsync(license);
-                    await uow.ApplicationRepository.ChangeStatusAsync(addLicenseDTO.AppId, AppStatuses.Completed);
-                    await uow.Complete(); // await if async
-                }
-                catch (Exception ex)
-                {
-                    return Result<int>.Failure([ex.Message, ex.InnerException?.Message ?? ""]);
-                }
-            */
             //TODO:Determine the validityPeriod of the International License default 10 yeas
             var license = new License
             {
-                AppId = addLicenseDTO.AppId,
+                AppId = application.AppID,
                 IssueDate = DateTime.UtcNow,
                 DriverId = driver.DriverId,
                 IssueReason = IssueReasons.InternationalLicenseFirstTime,
                 Notes = addLicenseDTO.Notes,
                 PaidFees = addLicenseDTO.PaidFees ,//Todo CHECK FOR THIS 
                 ExpirationDate = DateTime.UtcNow.AddYears(10),
-                LicenseClassId=application.LicenseClassId??0
+                //LicenseClassId=application.LicenseClassId??0
+                LicenseClassId = 3
             };
 
-            await uow.LicenseRepository.AddAsync(license);
-            await uow.ApplicationRepository.ChangeStatusAsync(addLicenseDTO.AppId, AppStatuses.Completed);
-            uow.Complete();
+            try
+            {
+                await uow.LicenseRepository.AddAsync(license);
+                await uow.ApplicationRepository.ChangeStatusAsync(addLicenseDTO.AppId, AppStatuses.Completed);
+                 uow.Complete();
+            }
+            catch (Exception ex)
+            {
+                return Result<int>.Failure([ex.Message, ex.InnerException?.Message ?? ""]);
+            }
 
             return Result<int>.Success(license.LicenseId);
         }
