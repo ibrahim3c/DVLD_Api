@@ -39,7 +39,8 @@ namespace DVLD.Api.Middlewares
                 _ => ((int)HttpStatusCode.InternalServerError, "An unexpected error occurred.")
             };
 
-            _logger.LogError(ex, "Exception occurred: {Message} | Status Code: {StatusCode}", message, statusCode);
+            _logger.LogError(ex, "Exception occurred: {Message} | Status Code: {StatusCode}",
+                message, statusCode);
             context.Response.StatusCode = statusCode;
 
             var response = new

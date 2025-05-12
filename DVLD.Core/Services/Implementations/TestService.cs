@@ -383,7 +383,8 @@ namespace DVLD.Core.Services.Implementations
         {
             if (!await uow.ApplicationRepository.AnyAsync(a => a.AppID == appId
                         && a.ApplicantId == applicantId
-                        && a.AppStatus == AppStatuses.Pending))
+                        && a.AppStatus == AppStatuses.Approved
+                        ))
                 return Result.Failure(["No Application for this Applicant Found!"]);
 
             var appointment = await uow.TestAppointmentRepository.FindAsync(t => t.ApplicationId == appId
@@ -471,6 +472,15 @@ namespace DVLD.Core.Services.Implementations
             return Result<List<TestAppointmentDTO>>.Success(testAppoinments);
         }
 
+
+        public async Task<Result<Test>>GetTestResultByTestAppoinmentId(int testAppoinmentId)
+        {
+            var testAppoinment = await uow.TestAppointmentRepository.FindAsync(t => t.Id == testAppoinmentId, ["Test"]);
+            if (testAppoinment == null)
+                return Result<Test>.Failure(["No Test Appointment Found"]);
+
+            return Result<Test>.Success(testAppoinment.Test);
+        }
 
         #endregion
 

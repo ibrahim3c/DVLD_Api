@@ -1,11 +1,13 @@
 ﻿using DVLD.Core.DTOs;
 using DVLD.Core.Helpers;
+using DVLD.Core.Models;
 
 namespace DVLD.Core.Services.Interfaces
 {
     public interface ITestService
     {
         #region TestType
+        Task<Result<Test>> GetTestResultByTestAppoinmentId(int testAppoinmentId);
         Task<Result<IEnumerable<TypeDTO>>> GetAllTestTypesAsync();
         Task<Result<TypeDTO>> GetTestTypeByIdAsync(int id);
         Task<Result> UpdateTestTypeAsync(int id, TypeDTO testTypeDTO);

@@ -24,6 +24,7 @@ namespace DVLD.Core.Services.Implementations
             this.ApplicantDTOValidator=applicantDTOValidator;
             userProfileValidator = UserProfileValidator;
         }
+
         public async Task<Result<int>> AddApplicant(ApplicantDTO addedApplicant)
         {
             var validationResult = ApplicantDTOValidator.Validate(addedApplicant);

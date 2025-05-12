@@ -5,7 +5,7 @@
         public int LicenseId {  get; set; }
         public DateTime IssueDate { get; set; }
         public DateTime ExpirationDate { get; set; }
-        public int LicenseClassId {  get; set; }
+        public int? LicenseClassId {  get; set; }
         public int DriverId {  get; set; }
         public string? IssueReason {  get; set; }
         public bool IsValid => ExpirationDate>=DateTime.Today && !IsDetained && !IsDamaged && !IsLost;

@@ -17,6 +17,18 @@ namespace DVLD.Api.Controllers
             this.licenseService = licenseService;
         }
 
+
+
+        [HttpGet("GetAllLicenses")]
+        [Authorize(Roles=Roles.AdminRole)]
+        public async Task<IActionResult> GetAllLicensesAsync()
+        {
+            var result = await licenseService.GetAllLicensesAsync();
+            if (result.IsSuccess)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
         [Authorize(Roles = Roles.AdminRole)]
         [HttpPost("IssueLicenseFirstTime")]
         public async Task<IActionResult> IssueLicenseFirstTime(AddLicenseDTO licenseDTO)

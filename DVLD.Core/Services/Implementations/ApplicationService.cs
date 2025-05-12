@@ -3,9 +3,7 @@ using DVLD.Core.Helpers;
 using DVLD.Core.IRepositories;
 using DVLD.Core.Models;
 using DVLD.Core.Services.Interfaces;
-using DVLD.Core.Validators;
 using FluentValidation;
-using System.Collections.Generic;
 
 namespace DVLD.Core.Services.Implementations
 {
@@ -614,6 +612,7 @@ namespace DVLD.Core.Services.Implementations
                 ApplicantId = applicantId,
                 AppStatus = AppStatuses.Pending,
                 AppTypeID = (int)AppTypes.NewInternationalDrivingLicense,
+                LicenseClassId=(int)LicenseClasses.ClassThree_Oridinary
             };
             await uow.ApplicationRepository.AddAsync(application);
             uow.Complete();
@@ -771,7 +770,14 @@ namespace DVLD.Core.Services.Implementations
 
         public async Task<Result<int>> ApplyForReplacementDamagedLicenseApplicationAsync(int licenseId)
         {
-            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId && l.IsValid, ["Application.Applicant", "LicenseClass"]);
+            var license = await uow.LicenseRepository.FindAsync(
+                l => l.LicenseId == licenseId &&
+                     l.ExpirationDate >= DateTime.Today &&
+                     !l.IsDetained &&
+                     !l.IsDamaged &&
+                     !l.IsLost,
+                ["Application.Applicant", "LicenseClass"]
+            );
             if (license is null)
                 return Result<int>.Failure(["No Active License Found!"]);
 
@@ -801,9 +807,17 @@ namespace DVLD.Core.Services.Implementations
             uow.Complete();
             return Result<int>.Success(application.AppID);
         }
+       
         public async Task<Result<int>> ApplyForReplacementLostLicenseApplicationAsync(int licenseId)
         {
-            var license = await uow.LicenseRepository.FindAsync(l => l.LicenseId == licenseId && l.IsValid, ["Application.Applicant", "LicenseClass"]);
+            var license = await uow.LicenseRepository.FindAsync(
+                l => l.LicenseId == licenseId &&
+                     l.ExpirationDate >= DateTime.Today &&
+                     !l.IsDetained &&
+                     !l.IsDamaged &&
+                     !l.IsLost,
+                ["Application.Applicant", "LicenseClass"]
+            );
             if (license is null)
                 return Result<int>.Failure(["No Active License Found!"]);
 
