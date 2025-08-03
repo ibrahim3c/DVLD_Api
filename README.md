@@ -2,7 +2,7 @@
 
 A modern REST API for managing driver licenses, vehicle registrations, and related services for a Driver's License and Vehicle Licensing Department (DVLD).
 
-![DVLD API Demo](https://via.placeholder.com/800x400?text=DVLD+API+Demo) *(Replace with actual screenshot)*
+![DVLD API Demo](https://via.placeholder.com/800x400?text=DVLD+API+Demo)
 
 ## 🔥 Features
 
